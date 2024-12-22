@@ -82,5 +82,3 @@ ${aiAnswer || ""}
     />
   );
 }
-
-// hella how is yoi?
