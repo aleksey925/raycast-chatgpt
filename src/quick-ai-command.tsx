@@ -56,12 +56,14 @@ ${aiAnswer || ""}
     <Detail
       markdown={message}
       actions={
-        <ActionPanel>
-          <ActionPanel.Section>
+        aiAnswer ? (
+          <ActionPanel>
             <Action.Paste title="Past Resopnse" content={aiAnswer || ""}></Action.Paste>
             <Action.CopyToClipboard title={`Copy Response`} content={aiAnswer || ""} />
-          </ActionPanel.Section>
-        </ActionPanel>
+          </ActionPanel>
+        ) : (
+          <ActionPanel> </ActionPanel>
+        )
       }
     />
   );
