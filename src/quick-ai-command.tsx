@@ -49,6 +49,7 @@ ${aiAnswer || ""}
 \`\`\`
 
 ---
+
 ![AI Icon](icon.png?raycast-width=15&raycast-height=15) ${targetModel.option}
 `;
   return (

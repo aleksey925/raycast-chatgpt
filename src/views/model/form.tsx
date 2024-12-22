@@ -130,8 +130,9 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
       )}
       <Form.TextArea title="Prompt" placeholder="Describe your prompt" {...itemProps.prompt} />
       <Form.TextField
-        title="Temperature"
-        placeholder="Set your sampling temperature (0 - 2)"
+        title="Creativity"
+        placeholder="Set the required level of creativity (0 - 2)"
+        info="Concrete tasks, such as fixing grammar, require less creativity, while open-ended questions, such as generating ideas, require more."
         {...itemProps.temperature}
       />
       {isCustomModel ? (
