@@ -1,16 +1,30 @@
-import { Action, ActionPanel, Detail, LaunchProps } from "@raycast/api";
+import { Action, ActionPanel, Clipboard, Detail, getSelectedText, LaunchProps } from "@raycast/api";
 import { useModel } from "./hooks/useModel";
-import useUserInput from "./hooks/useUserInput";
 import { useChat } from "./hooks/useChat";
 import { useEffect, useState } from "react";
 
 export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments.QuickAiCommand }>) {
   const models = useModel();
   const chat = useChat([]);
-  const { ready: isUserInputReady, text: userInput } = useUserInput();
+  const [userInput, setUserInput] = useState<string | null>(null);
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
 
   const targetModel = models.data.find((model) => model.id === props.arguments.modelId);
+
+  useEffect(() => {
+    (async () => {
+      if (targetModel) {
+        let text: string | undefined;
+        if (targetModel.quickCommandSource === "clipboard") {
+          text = await Clipboard.readText();
+        } else {
+          await getSelectedText(); // This is a workaround to get the actual selected text; otherwise, it can return the previously selected text.
+          text = await getSelectedText();
+        }
+        setUserInput(text || "");
+      }
+    })();
+  }, [targetModel]);
 
   useEffect(() => {
     if (userInput && targetModel) {
@@ -28,7 +42,7 @@ export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments
     }
   }, [chat.streamData, chat.isLoading, chat.data]);
 
-  if (models.isLoading || !isUserInputReady) {
+  if (models.isLoading || !userInput) {
     return <Detail markdown="" />;
   }
   if (!targetModel) {
@@ -62,9 +76,11 @@ ${aiAnswer || ""}
             <Action.CopyToClipboard title={`Copy Response`} content={aiAnswer || ""} />
           </ActionPanel>
         ) : (
-          <ActionPanel> </ActionPanel>
+          <ActionPanel></ActionPanel>
         )
       }
     />
   );
 }
+
+// hella how is yoi?

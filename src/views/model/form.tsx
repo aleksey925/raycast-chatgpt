@@ -5,6 +5,7 @@ import { CSVPrompt, Model, ModelHook } from "../../type";
 import { parse } from "csv-parse/sync";
 import { useCallback, useState } from "react";
 import { getConfiguration } from "../../hooks/useChatGPT";
+import { quickCommandSourceIcons, quickCommandSourceTitles } from "../../utils/views";
 
 export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; name?: string }) => {
   const { use, model } = props;
@@ -64,6 +65,7 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
       prompt: model?.prompt ?? "You are a helpful assistant.",
       pinned: model?.pinned ?? false,
       vision: model?.vision ?? false,
+      quickCommandSource: model?.quickCommandSource ?? "none",
     },
   });
 
@@ -147,6 +149,29 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
 
       <Form.Checkbox title="Vision" label="Enable vision capabilities" {...itemProps.vision} />
       {model?.id !== "default" && <Form.Checkbox title="Pinned" label="Pin model" {...itemProps.pinned} />}
+      <Form.Separator />
+      <Form.Dropdown
+        title="Quick command source"
+        placeholder="Source of the data to be processed"
+        info={
+          "If you select the source, you will be able to create a command from this model that will function " +
+          "as a standard command. This command will be able to retrieve your data from the chosen " +
+          "source and process it according to your prompt."
+        }
+        {...itemProps.quickCommandSource}
+      >
+        <Form.Dropdown.Item value="none" title={quickCommandSourceTitles["none"]} />
+        <Form.Dropdown.Item
+          value="selectedText"
+          title={quickCommandSourceTitles["selectedText"]}
+          icon={quickCommandSourceIcons["selectedText"]}
+        />
+        <Form.Dropdown.Item
+          value="clipboard"
+          title={quickCommandSourceTitles["clipboard"]}
+          icon={quickCommandSourceIcons["clipboard"]}
+        />
+      </Form.Dropdown>
     </Form>
   );
 };

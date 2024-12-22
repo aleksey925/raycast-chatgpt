@@ -31,14 +31,16 @@ export default function Model() {
         icon={Icon.Text}
         onAction={() => push(<ModelForm name={searchText} use={{ models }} />)}
       />
-      <Action.CreateQuicklink
-        quicklink={{
-          name: model.name,
-          link: `raycast://extensions/${packageJson.author}/${
-            packageJson.name
-          }/quick-ai-command?arguments=${encodeURIComponent(JSON.stringify({ modelId: model.id }))}`,
-        }}
-      />
+      {!model.quickCommandSource || model.quickCommandSource == "none" ? null : (
+        <Action.CreateQuicklink
+          quicklink={{
+            name: model.name,
+            link: `raycast://extensions/${packageJson.author}/${
+              packageJson.name
+            }/quick-ai-command?arguments=${encodeURIComponent(JSON.stringify({ modelId: model.id }))}`,
+          }}
+        />
+      )}
       <ActionPanel.Section title="Actions">
         <Action title={"Export Models"} icon={Icon.Upload} onAction={() => ExportData(models.data, "Models")} />
         <Action
