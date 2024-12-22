@@ -14,6 +14,7 @@ export const DEFAULT_MODEL: Model = {
   temperature: "1",
   pinned: false,
   vision: false,
+  quickCommandSource: "none",
 };
 
 export function useModel(): ModelHook {
