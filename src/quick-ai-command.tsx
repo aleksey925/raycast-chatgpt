@@ -42,11 +42,28 @@ export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments
     }
   }, [chat.streamData, chat.isLoading, chat.data]);
 
-  if (models.isLoading || !userInput) {
+  if (props.arguments.modelId === "") {
+    return (
+      <Detail
+        markdown={
+          "It is a meta command needed to create a 'Quick Link' for a model that will serve as a quick command." +
+          "You shouldn't run it manually."
+        }
+      />
+    );
+  }
+  if (models.isLoading && !userInput) {
     return <Detail markdown="" />;
   }
   if (!targetModel) {
-    return <Detail markdown="Model required for running quick AI command not found" />;
+    return (
+      <Detail
+        markdown={
+          `Model with id=${props.arguments.modelId} not found. This model may have been deleted.` +
+          `You need to remove this quick link, create the model again, and then create the quick link once more.`
+        }
+      />
+    );
   }
 
   const message = `
