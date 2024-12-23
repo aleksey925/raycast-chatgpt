@@ -66,6 +66,7 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
       pinned: model?.pinned ?? false,
       vision: model?.vision ?? false,
       quickCommandSource: model?.quickCommandSource ?? "none",
+      quickCommandIsDisplayInput: model?.quickCommandIsDisplayInput ?? false,
     },
   });
 
@@ -151,7 +152,7 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
       {model?.id !== "default" && <Form.Checkbox title="Pinned" label="Pin model" {...itemProps.pinned} />}
       <Form.Separator />
       <Form.Dropdown
-        title="Quick command source"
+        title="Input source"
         placeholder="Source of the data to be processed"
         info={
           "If you select the source, you will be able to create a command from this model that will function " +
@@ -171,7 +172,22 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
           title={quickCommandSourceTitles["clipboard"]}
           icon={quickCommandSourceIcons["clipboard"]}
         />
+        <Form.Dropdown.Item
+          value="browserTab"
+          title={quickCommandSourceTitles["browserTab"]}
+          icon={quickCommandSourceIcons["browserTab"]}
+        />
       </Form.Dropdown>
+      <Form.Checkbox
+        title="Display input"
+        label="Enable the display of user input"
+        info={
+          "If this option is enabled, user input will be displayed in the quick command view. " +
+          "This is useful when your quick command modifies data from the user, such as in " +
+          "the case of the command 'Fix Spelling and Grammar.'"
+        }
+        {...itemProps.quickCommandIsDisplayInput}
+      />
     </Form>
   );
 };

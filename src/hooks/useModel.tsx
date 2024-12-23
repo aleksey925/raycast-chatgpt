@@ -15,6 +15,7 @@ export const DEFAULT_MODEL: Model = {
   pinned: false,
   vision: false,
   quickCommandSource: "none",
+  quickCommandIsDisplayInput: false,
 };
 
 export function useModel(): ModelHook {

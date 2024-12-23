@@ -39,7 +39,8 @@ export interface Model {
   temperature: string;
   pinned: boolean;
   vision?: boolean;
-  quickCommandSource?: "none" | "clipboard" | "selectedText";
+  quickCommandSource?: "none" | "clipboard" | "selectedText" | "browserTab";
+  quickCommandIsDisplayInput?: boolean;
 }
 
 type PromiseFunctionNoArg = () => Promise<void>;
