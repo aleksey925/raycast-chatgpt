@@ -7,43 +7,43 @@ import { PrimaryAction } from "./actions";
 import { Model } from "./type";
 
 export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments.QuickAiCommand }>) {
-  const models = useModel();
+  const modelService = useModel();
   const chat = useChat([]);
   const [userInput, setUserInput] = useState<string | null>(null);
-  const [userInputExtractError, setUserInputExtractError] = useState<string | null>(null);
+  const [userInputError, setUserInputError] = useState<string | null>(null);
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
 
-  const targetModel = models.data.find((model) => model.id === props.arguments.modelId);
+  const model = modelService.data.find((model) => model.id === props.arguments.modelId);
 
   useEffect(() => {
     (async () => {
-      if (targetModel) {
-        setUserInputExtractError(null);
+      if (model) {
+        setUserInputError(null);
         let text: string | null = null;
-        if (targetModel.quickCommandSource === "clipboard") {
+        if (model.quickCommandSource === "clipboard") {
           text = (await Clipboard.readText()) || null;
-        } else if (targetModel.quickCommandSource === "selectedText") {
-          await getSelectedText(); // This is a workaround to get the actual selected text; otherwise, it can return the previously selected text.
+        } else if (model.quickCommandSource === "selectedText") {
+          // This is a workaround to get the actual selected text; otherwise, it can return the previously selected text.
+          await getSelectedText();
           text = await getSelectedText();
         } else {
           try {
             text = await getBrowserContent();
-            console.log(text);
           } catch (error) {
-            setUserInputExtractError("Could not connect to the Browser Extension. Make sure a Browser Tab is focused.");
+            setUserInputError("Could not connect to the Browser Extension. Make sure a Browser Tab is focused.");
           }
         }
         setUserInput(text || "");
       }
     })();
-  }, [targetModel]);
+  }, [model]);
 
   useEffect(() => {
-    if (userInput && targetModel) {
+    if (userInput && model) {
       setAiAnswer(null);
-      chat.ask(userInput, [], targetModel);
+      chat.ask(userInput, [], model);
     }
-  }, [userInput, targetModel]);
+  }, [userInput, model]);
 
   useEffect(() => {
     if (!chat.streamData && !chat.isLoading && chat.data.length > 0) {
@@ -64,10 +64,10 @@ export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments
       />
     );
   }
-  if (models.isLoading && !userInput) {
+  if (modelService.isLoading && !userInput) {
     return <Detail markdown="" />;
   }
-  if (!targetModel) {
+  if (!model) {
     return (
       <Detail
         markdown={
@@ -77,7 +77,7 @@ export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments
       />
     );
   }
-  if (targetModel.quickCommandSource === "browserTab" && !canAccessBrowserExtension()) {
+  if (model.quickCommandSource === "browserTab" && !canAccessBrowserExtension()) {
     return (
       <List
         actions={
@@ -95,7 +95,7 @@ export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments
     );
   }
 
-  const content = buildViewContent(targetModel, userInput, aiAnswer, userInputExtractError);
+  const content = buildViewContent(model, userInput, aiAnswer, userInputError);
   return (
     <Detail
       markdown={content}
