@@ -4,19 +4,50 @@ import { Model, ModelHook } from "../type";
 import { getConfiguration, useChatGPT } from "./useChatGPT";
 import { useProxy } from "./useProxy";
 
-export const DEFAULT_MODEL: Model = {
-  id: "default",
-  updated_at: new Date().toISOString(),
-  created_at: new Date().toISOString(),
-  name: "Default",
-  prompt: "You are a helpful assistant.",
-  option: "gpt-4o-mini",
-  temperature: "1",
-  pinned: false,
-  vision: false,
-  quickCommandSource: "none",
-  quickCommandIsDisplayInput: false,
-};
+export const DEFAULT_MODEL_ID: string = "default";
+export const DEFAULT_MODEL_ID_PREFIX: string = DEFAULT_MODEL_ID;
+export const DEFAULT_MODELS: Model[] = [
+  {
+    id: DEFAULT_MODEL_ID,
+    updated_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    name: "Default",
+    prompt: "You are a helpful assistant.",
+    option: "gpt-4o-mini",
+    temperature: "1",
+    pinned: false,
+    vision: false,
+    quickCommandSource: "none",
+    quickCommandIsDisplayInput: false,
+  },
+  {
+    id: `${DEFAULT_MODEL_ID_PREFIX}-fix-spelling-and-grammar`,
+    updated_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    name: "Fix Spelling and Grammar",
+    prompt: "You are an assistant that fixes spelling and grammar mistakes",
+    option: "gpt-4o-mini",
+    temperature: "0.7",
+    pinned: false,
+    vision: false,
+    quickCommandSource: "selectedText",
+    quickCommandIsDisplayInput: true,
+  },
+  {
+    id: `${DEFAULT_MODEL_ID_PREFIX}-summarize-webpage`,
+    updated_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    name: "Summarize Webpage",
+    prompt:
+      "Read and summarize the main ideas and key points from this text. Summarize the information concisely and clearly.",
+    option: "gpt-4o-mini",
+    temperature: "1",
+    pinned: false,
+    vision: false,
+    quickCommandSource: "browserTab",
+    quickCommandIsDisplayInput: false,
+  },
+];
 
 export function useModel(): ModelHook {
   const [data, setData] = useState<Model[]>([]);
@@ -80,12 +111,18 @@ export function useModel(): ModelHook {
 
   useEffect(() => {
     (async () => {
-      const storedModels = await LocalStorage.getItem<string>("models");
+      const storedModels: Model[] = JSON.parse((await LocalStorage.getItem<string>("models")) || "[]");
 
-      if (!storedModels || storedModels === "[]") {
-        setData([DEFAULT_MODEL]);
+      if (storedModels.length === 0) {
+        setData(DEFAULT_MODELS);
       } else {
-        setData(JSON.parse(storedModels));
+        const allModels = [
+          ...storedModels,
+          ...DEFAULT_MODELS.filter(
+            (defaultModel) => !storedModels.some((model: Model) => model.id === defaultModel.id)
+          ),
+        ];
+        setData(allModels);
       }
       setLoading(false);
       isInitialMount.current = false;
@@ -144,11 +181,10 @@ export function useModel(): ModelHook {
 
   const clear = useCallback(async () => {
     const toast = await showToast({
-      title: "Clearing your models ...",
+      title: "Clearing models...",
       style: Toast.Style.Animated,
     });
-    const newModels: Model[] = data.filter((oldModel) => oldModel.id === DEFAULT_MODEL.id);
-    setData(newModels);
+    setData(DEFAULT_MODELS);
     toast.title = "Models cleared!";
     toast.style = Toast.Style.Success;
   }, [setData]);
@@ -160,8 +196,12 @@ export function useModel(): ModelHook {
     [setData]
   );
 
+  const isDefaultModel = useCallback((id: string): boolean => {
+    return DEFAULT_MODELS.some((defaultModel) => defaultModel.id === id);
+  }, []);
+
   return useMemo(
-    () => ({ data, isLoading, option, add, update, remove, clear, setModels, isFetching }),
-    [data, isLoading, option, add, update, remove, clear, setModels, isFetching]
+    () => ({ data, isLoading, option, add, update, remove, clear, setModels, isFetching, isDefaultModel }),
+    [data, isLoading, option, add, update, remove, clear, setModels, isFetching, isDefaultModel]
   );
 }

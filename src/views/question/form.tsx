@@ -10,7 +10,7 @@ import {
   Clipboard,
 } from "@raycast/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DEFAULT_MODEL } from "../../hooks/useModel";
+import { DEFAULT_MODELS, useModel } from "../../hooks/useModel";
 import { QuestionFormProps } from "../../type";
 import { checkFileValidity, formats } from "../../utils";
 import path from "node:path";
@@ -25,12 +25,13 @@ export const QuestionForm = ({
 }: QuestionFormProps) => {
   const { pop } = useNavigation();
 
+  const { isDefaultModel } = useModel();
   const [question, setQuestion] = useState<string>(initialQuestion ?? "");
   const [questionError, setQuestionError] = useState<string | undefined>();
   const [attachmentError, setAttachmentError] = useState<string | undefined>();
 
-  const separateDefaultModel = models.filter((x) => x.id !== "default");
-  const defaultModel = models.find((x) => x.id === "default") ?? DEFAULT_MODEL;
+  const separateDefaultModel = models.filter((x) => !isDefaultModel(x.id));
+  const defaultModels = models.filter((x) => isDefaultModel(x.id)) ?? DEFAULT_MODELS;
 
   const visionMap = useMemo(() => {
     const map = new Map<string, boolean>();
@@ -155,7 +156,8 @@ export const QuestionForm = ({
           onModelChange(id);
         }}
       >
-        {defaultModel && <Form.Dropdown.Item key={defaultModel.id} title={defaultModel.name} value={defaultModel.id} />}
+        {defaultModels &&
+          defaultModels.map((model) => <Form.Dropdown.Item value={model.id} title={model.name} key={model.id} />)}
         <Form.Dropdown.Section title="Custom Models">
           {separateDefaultModel.map((model) => (
             <Form.Dropdown.Item value={model.id} title={model.name} key={model.id} />

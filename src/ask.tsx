@@ -7,7 +7,7 @@ import { PreferencesActionSection } from "./actions/preferences";
 import { useAutoSaveConversation } from "./hooks/useAutoSaveConversation";
 import { useChat } from "./hooks/useChat";
 import { useConversations } from "./hooks/useConversations";
-import { DEFAULT_MODEL, useModel } from "./hooks/useModel";
+import { DEFAULT_MODEL_ID, DEFAULT_MODELS, useModel } from "./hooks/useModel";
 import { useQuestion } from "./hooks/useQuestion";
 import { useSavedChat } from "./hooks/useSavedChat";
 import { Chat, Conversation, Model } from "./type";
@@ -34,7 +34,7 @@ export default function Ask(props: { conversation?: Conversation; initialQuestio
     props.conversation ?? {
       id: uuidv4(),
       chats: [],
-      model: DEFAULT_MODEL,
+      model: DEFAULT_MODELS[0],
       pinned: false,
       updated_at: "",
       created_at: new Date().toISOString(),
@@ -44,7 +44,7 @@ export default function Ask(props: { conversation?: Conversation; initialQuestio
   const [isLoading, setLoading] = useState<boolean>(true);
 
   const [selectedModelId, setSelectedModelId] = useState<string>(
-    props.conversation ? props.conversation.model.id : "default"
+    props.conversation ? props.conversation.model.id : DEFAULT_MODEL_ID
   );
 
   const [{ isAutoFullInput, isAutoLoadText }] = useState(() => {
@@ -110,7 +110,7 @@ export default function Ask(props: { conversation?: Conversation; initialQuestio
       return;
     }
     if (models.data && conversation.chats.length === 0) {
-      const defaultUserModel = models.data.find((x) => x.id === DEFAULT_MODEL.id) ?? conversation.model;
+      const defaultUserModel = models.data.find((x) => x.id === DEFAULT_MODELS[0].id) ?? conversation.model;
       setConversation({ ...conversation, model: defaultUserModel, updated_at: new Date().toISOString() });
     }
   }, [models.isLoading, models.data]);

@@ -72,8 +72,10 @@ export type QuestionHook = BaseHook<string> & { update: PromiseFunctionWithOneAr
 export type ModelHook = Hook<Model> & {
   setModels: PromiseFunctionWithOneArg<Model[]>;
   update: PromiseFunctionWithOneArg<Model>;
+  clear: PromiseFunctionNoArg;
   option: Model["option"][];
   isFetching: boolean;
+  isDefaultModel: (id: string) => boolean;
 };
 
 export interface ChatHook {

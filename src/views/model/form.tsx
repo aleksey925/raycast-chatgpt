@@ -6,9 +6,11 @@ import { parse } from "csv-parse/sync";
 import { useCallback, useState } from "react";
 import { getConfiguration } from "../../hooks/useChatGPT";
 import { quickCommandSourceIcons, quickCommandSourceTitles } from "../../utils/views";
+import { useModel } from "../../hooks/useModel";
 
 export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; name?: string }) => {
   const { use, model } = props;
+  const { isDefaultModel } = useModel();
   const { pop } = useNavigation();
   const { isCustomModel } = getConfiguration();
 
@@ -149,7 +151,7 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
       )}
 
       <Form.Checkbox title="Vision" label="Enable vision capabilities" {...itemProps.vision} />
-      {model?.id !== "default" && <Form.Checkbox title="Pinned" label="Pin model" {...itemProps.pinned} />}
+      {!isDefaultModel(model?.id || "") && <Form.Checkbox title="Pinned" label="Pin model" {...itemProps.pinned} />}
       <Form.Separator />
       <Form.Dropdown
         title="Input source"

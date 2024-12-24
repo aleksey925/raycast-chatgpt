@@ -8,7 +8,7 @@ export const ModelListView = ({
   selectedModel,
   actionPanel,
 }: {
-  title: string;
+  title?: string;
   models: Model[];
   selectedModel: string | null;
   actionPanel: (model: Model) => JSX.Element;
@@ -34,7 +34,7 @@ export const ModelListItem = ({
       id={model.id}
       key={model.id}
       title={model.name}
-      accessories={[{ text: new Date(model.updated_at ?? 0).toLocaleDateString() }]}
+      accessories={[{ icon: quickCommandSourceIcons[model?.quickCommandSource || "none"] }]}
       detail={<ModelDetailView model={model} />}
       actions={selectedModel === model.id ? actionPanel(model) : undefined}
     />
