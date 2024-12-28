@@ -1,49 +1,60 @@
-import { Action, ActionPanel, Clipboard, Detail, getSelectedText, Icon, LaunchProps, List, open } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Application,
+  Detail,
+  getFrontmostApplication,
+  Icon,
+  LaunchProps,
+  List,
+  open,
+} from "@raycast/api";
 import { useModel } from "./hooks/useModel";
 import { useChat } from "./hooks/useChat";
 import { useEffect, useState } from "react";
-import { canAccessBrowserExtension, getBrowserContent } from "./utils/browser";
+import { canAccessBrowserExtension } from "./utils/browser";
 import { PrimaryAction } from "./actions";
 import { Model } from "./type";
+import { fetchContent } from "./utils/user-input";
+import { getAppIconPath } from "./utils/icon";
 
-export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments.QuickAiCommand }>) {
-  const modelService = useModel();
+export default function QuickAiCommand(props: LaunchProps) {
+  const modelHook = useModel();
   const chat = useChat([]);
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [userInput, setUserInput] = useState<string | null>(null);
   const [userInputError, setUserInputError] = useState<string | null>(null);
-  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+  const [userInputIsLoading, setUserInputIsLoading] = useState<boolean>(true);
+  const [frontmostApp, setFrontmostApp] = useState<Application>();
 
-  const model = modelService.data.find((model) => model.id === props.arguments.modelId);
+  const requestModelId = props.launchContext?.modelId;
+  const model = modelHook.data.find((model) => model.id === requestModelId);
+
+  useEffect(() => {
+    getFrontmostApplication().then(setFrontmostApp);
+  }, []);
 
   useEffect(() => {
     (async () => {
-      if (model) {
-        setUserInputError(null);
-        let text: string | null = null;
-        if (model.quickCommandSource === "clipboard") {
-          text = (await Clipboard.readText()) || null;
-        } else if (model.quickCommandSource === "selectedText") {
-          // This is a workaround to get the actual selected text; otherwise, it can return the previously selected text.
-          await getSelectedText();
-          text = await getSelectedText();
-        } else {
-          try {
-            text = await getBrowserContent();
-          } catch (error) {
-            setUserInputError("Could not connect to the Browser Extension. Make sure a Browser Tab is focused.");
-          }
-        }
-        setUserInput(text || "");
+      if (!model) {
+        return;
       }
+      if (model.quickCommandSource === "none" || model.quickCommandSource === undefined) {
+        return;
+      }
+      const { content, error } = await fetchContent(model?.quickCommandSource);
+      setUserInput(content);
+      setUserInputError(error);
+      setUserInputIsLoading(false);
     })();
   }, [model]);
 
   useEffect(() => {
-    if (userInput && model) {
+    if (!userInputIsLoading && userInput && model) {
       setAiAnswer(null);
       chat.ask(userInput, [], model);
     }
-  }, [userInput, model]);
+  }, [userInputIsLoading, userInput, model]);
 
   useEffect(() => {
     if (!chat.streamData && !chat.isLoading && chat.data.length > 0) {
@@ -54,55 +65,37 @@ export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments
     }
   }, [chat.streamData, chat.isLoading, chat.data]);
 
-  if (props.arguments.modelId === "") {
-    return (
-      <Detail
-        markdown={
-          "It is a meta command needed to create a 'Quicklink' for a model that will serve as a quick command." +
-          "You shouldn't run it manually."
-        }
-      />
-    );
+  if (requestModelId === undefined) {
+    return DIRECT_CMD_LAUNCH_VIEW;
   }
-  if (modelService.isLoading && !userInput) {
+  if (modelHook.isLoading) {
     return <Detail markdown="" />;
   }
   if (!model) {
-    return (
-      <Detail
-        markdown={
-          `Model with id=${props.arguments.modelId} not found. This model may have been deleted.` +
-          `You need to remove this quick link, create the model again, and then create the quick link once more.`
-        }
-      />
-    );
+    return buildModelNotFoundView(requestModelId);
   }
-  if (model.quickCommandSource === "browserTab" && !canAccessBrowserExtension()) {
-    return (
-      <List
-        actions={
-          <ActionPanel>
-            <PrimaryAction title="Install" onAction={() => open("https://www.raycast.com/browser-extension")} />
-          </ActionPanel>
-        }
-      >
-        <List.EmptyView
-          icon={Icon.BoltDisabled}
-          title={"Browser Extension Required"}
-          description={"This command need install Raycast browser extension to work. Please install it first"}
-        />
-      </List>
-    );
+  if (model.quickCommandSource === "none" || model.quickCommandSource === undefined) {
+    return buildUnsupportedModelView(model.name);
+  } else if (model.quickCommandSource === "browserTab" && !canAccessBrowserExtension()) {
+    return BROWSER_EXTENSION_NOT_AVAILABLE_VIEW;
   }
 
-  const content = buildViewContent(model, userInput, aiAnswer, userInputError);
+  const content = buildViewContent(model, frontmostApp, userInput, aiAnswer, userInputError);
   return (
     <Detail
       markdown={content}
       actions={
         aiAnswer ? (
           <ActionPanel>
-            <Action.Paste title="Past Resopnse" content={aiAnswer || ""}></Action.Paste>
+            {frontmostApp ? (
+              <Action.Paste
+                title={`Paste Response to ${frontmostApp.name}`}
+                content={aiAnswer || ""}
+                icon={{ fileIcon: frontmostApp.path }}
+              />
+            ) : (
+              <Action.Paste title="Paste Response" content={aiAnswer || ""} />
+            )}
             <Action.CopyToClipboard title={`Copy Response`} content={aiAnswer || ""} />
           </ActionPanel>
         ) : (
@@ -115,25 +108,88 @@ export default function QuickAiCommand(props: LaunchProps<{ arguments: Arguments
 
 function buildViewContent(
   model: Model,
+  frontmostApp: Application | undefined,
   userInput: string | null,
   aiAnswer: string | null,
   error: string | null
 ): string {
-  let inputTemplate = "";
-  if (model.quickCommandIsDisplayInput) {
-    inputTemplate = `Input:\n\n\`\`\`${userInput}\`\`\`\n\nOutput:`;
+  let appIcon = "";
+  let iconPath = "";
+
+  if (model?.quickCommandSource === "clipboard") {
+    iconPath = "clipboard.svg";
+  } else if (frontmostApp?.path) {
+    try {
+      iconPath = getAppIconPath(frontmostApp.path).replace(/ /g, "%20");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (iconPath) {
+    appIcon = `&#x200b;![App Icon](${iconPath}?raycast-width=16&raycast-height=16) `;
   }
 
-  return `
-## ${model.name}
+  let inputTemplate = "";
+  if (model.quickCommandIsDisplayInput) {
+    inputTemplate = `${userInput || "..."}
 
+---
+  
+`;
+  }
+
+  return `${appIcon}${model.name}
+---
 ${inputTemplate}
-\`\`\`
-${aiAnswer || ""}
-\`\`\`
+
+${aiAnswer || "..."}
 
 ---
 
 ![AI Icon](icon.png?raycast-width=15&raycast-height=15) ${model.option} ${error || ""}
 `;
 }
+
+function buildModelNotFoundView(modelId: string) {
+  return (
+    <Detail
+      markdown={
+        `Model with id=${modelId} not found. This model may have been deleted.` +
+        `You need to remove this quick link, create the model again, and then create the quick link once more.`
+      }
+    />
+  );
+}
+
+function buildUnsupportedModelView(model_name: string) {
+  return (
+    <Detail
+      markdown={`Model ${model_name} is not suitable for quick commands. You need to set the "Quick command source" to use this model as a quick command.`}
+    />
+  );
+}
+
+const DIRECT_CMD_LAUNCH_VIEW = (
+  <Detail
+    markdown={
+      "It is a meta command needed to create a 'Quicklink' for a model that will serve as a quick command." +
+      "You shouldn't run it manually."
+    }
+  />
+);
+
+const BROWSER_EXTENSION_NOT_AVAILABLE_VIEW = (
+  <List
+    actions={
+      <ActionPanel>
+        <PrimaryAction title="Install" onAction={() => open("https://www.raycast.com/browser-extension")} />
+      </ActionPanel>
+    }
+  >
+    <List.EmptyView
+      icon={Icon.BoltDisabled}
+      title={"Browser Extension Required"}
+      description={"This command need install Raycast browser extension to work. Please install it first"}
+    />
+  </List>
+);

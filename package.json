@@ -128,15 +128,7 @@
       "name": "quick-ai-command",
       "title": "Quick AI Command",
       "description": "Entrypoint for obtaining answers from the target AI model",
-      "mode": "view",
-      "arguments": [
-        {
-          "name": "modelId",
-          "placeholder": "Model ID",
-          "type": "text",
-          "required": false
-        }
-      ]
+      "mode": "view"
     }
   ],
   "keywords": [
@@ -348,6 +340,7 @@
     "image-meta": "^0.2.0",
     "moment": "^2.30.1",
     "openai": "^4.40.0",
+    "plist": "^3.1.0",
     "proxy-agent": "^6.3.1",
     "run-applescript": "^7.0.0",
     "say": "^0.16.0",

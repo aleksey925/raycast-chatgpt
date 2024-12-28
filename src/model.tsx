@@ -37,7 +37,7 @@ export default function Model() {
             name: model.name,
             link: `raycast://extensions/${packageJson.author}/${
               packageJson.name
-            }/quick-ai-command?arguments=${encodeURIComponent(JSON.stringify({ modelId: model.id }))}`,
+            }/quick-ai-command?context=${encodeURIComponent(JSON.stringify({ modelId: model.id }))}`,
           }}
         />
       )}
