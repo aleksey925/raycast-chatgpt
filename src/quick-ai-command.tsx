@@ -80,12 +80,12 @@ export default function QuickAiCommand(props: LaunchProps) {
     return BROWSER_EXTENSION_NOT_AVAILABLE_VIEW;
   }
 
-  const content = buildViewContent(model, frontmostApp, userInput, aiAnswer, userInputError);
+  const content = buildViewContent(model, frontmostApp, userInput, aiAnswer, chat.isAborted, userInputError);
   return (
     <Detail
       markdown={content}
       actions={
-        aiAnswer ? (
+        !chat.isLoading && !chat.isAborted ? (
           <ActionPanel>
             {frontmostApp ? (
               <Action.Paste
@@ -98,8 +98,12 @@ export default function QuickAiCommand(props: LaunchProps) {
             )}
             <Action.CopyToClipboard title={`Copy Response`} content={aiAnswer || ""} />
           </ActionPanel>
-        ) : (
+        ) : chat.isAborted ? (
           <ActionPanel></ActionPanel>
+        ) : (
+          <ActionPanel>
+            <Action title="Cancel" icon={Icon.Stop} onAction={() => chat.abort()} />
+          </ActionPanel>
         )
       }
     />
@@ -111,6 +115,7 @@ function buildViewContent(
   frontmostApp: Application | undefined,
   userInput: string | null,
   aiAnswer: string | null,
+  isAborted: boolean,
   error: string | null
 ): string {
   let appIcon = "";
@@ -146,7 +151,7 @@ ${aiAnswer || "..."}
 
 ---
 
-![AI Icon](icon.png?raycast-width=15&raycast-height=15) ${model.option} ${error || ""}
+![AI Icon](icon.png?raycast-width=15&raycast-height=15) ${model.option} ${error || ""} ${isAborted ? "Canceled" : ""}
 `;
 }
 

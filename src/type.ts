@@ -43,6 +43,7 @@ export interface Model {
   quickCommandIsDisplayInput?: boolean;
 }
 
+type FunctionNoArg = () => void;
 type PromiseFunctionNoArg = () => Promise<void>;
 type PromiseFunctionWithOneArg<T> = (arg: T) => Promise<void>;
 // type PromiseFunctionWithTwoArg<T, V> = (arg_1: T, arg_2: V) => Promise<void>;
@@ -82,11 +83,13 @@ export interface ChatHook {
   data: Chat[];
   setData: Set<Chat[]>;
   isLoading: boolean;
+  isAborted: boolean;
   setLoading: Set<boolean>;
   selectedChatId: string | null;
   setSelectedChatId: Set<string | null>;
   ask: PromiseFunctionWithThreeArg<string, string[], Model>;
   clear: PromiseFunctionNoArg;
+  abort: FunctionNoArg;
   streamData: Chat | undefined;
 }
 
