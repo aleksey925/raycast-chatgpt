@@ -81,33 +81,31 @@ export default function QuickAiCommand(props: LaunchProps) {
   }
 
   const content = buildViewContent(model, frontmostApp, userInput, aiAnswer, chat.isAborted, userInputError);
-  return (
-    <Detail
-      markdown={content}
-      actions={
-        !chat.isLoading && !chat.isAborted ? (
-          <ActionPanel>
-            {frontmostApp ? (
-              <Action.Paste
-                title={`Paste Response to ${frontmostApp.name}`}
-                content={aiAnswer || ""}
-                icon={{ fileIcon: frontmostApp.path }}
-              />
-            ) : (
-              <Action.Paste title="Paste Response" content={aiAnswer || ""} />
-            )}
-            <Action.CopyToClipboard title={`Copy Response`} content={aiAnswer || ""} />
-          </ActionPanel>
-        ) : chat.isAborted ? (
-          <ActionPanel></ActionPanel>
-        ) : (
-          <ActionPanel>
-            <Action title="Cancel" icon={Icon.Stop} onAction={() => chat.abort()} />
-          </ActionPanel>
-        )
+
+  const actions: JSX.Element[] = [];
+  if (!chat.isAborted) {
+    if (chat.isLoading) {
+      actions.push(<Action key="cancel" title="Cancel" icon={Icon.Stop} onAction={chat.abort} />);
+    } else {
+      const copyToClipboard = (
+        <Action.CopyToClipboard key="copyToClipboard" title={`Copy Response`} content={aiAnswer || ""} />
+      );
+      if (model?.quickCommandSource === "selectedText") {
+        actions.push(
+          <Action.Paste
+            key="pasteToActiveApp"
+            title={`Paste Response to ${frontmostApp ? frontmostApp.name : "Active App"}`}
+            content={aiAnswer || ""}
+            icon={frontmostApp ? { fileIcon: frontmostApp.path } : Icon.AppWindow}
+          />
+        );
+        actions.push(copyToClipboard);
+      } else {
+        actions.push(copyToClipboard);
       }
-    />
-  );
+    }
+  }
+  return <Detail markdown={content} actions={<ActionPanel>{actions}</ActionPanel>} />;
 }
 
 function buildViewContent(
