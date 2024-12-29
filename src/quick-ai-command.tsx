@@ -116,41 +116,102 @@ function buildViewContent(
   isAborted: boolean,
   error: string | null
 ): string {
-  let appIcon = "";
-  let iconPath = "";
-
-  if (model?.quickCommandSource === "clipboard") {
-    iconPath = "clipboard.svg";
-  } else if (frontmostApp?.path) {
-    try {
-      iconPath = getAppIconPath(frontmostApp.path).replace(/ /g, "%20");
-    } catch (e) {
-      console.error(e);
-    }
-  }
-  if (iconPath) {
-    appIcon = `&#x200b;![App Icon](${iconPath}?raycast-width=16&raycast-height=16) `;
-  }
-
   let inputTemplate = "";
   if (model.quickCommandIsDisplayInput) {
-    inputTemplate = `${userInput || "..."}
-
----
-  
-`;
+    inputTemplate = `${userInput || "..."}\n\n---\n\n`;
   }
 
-  return `${appIcon}${model.name}
----
+  return `${generateTitleSvg(model.name, frontmostApp, model?.quickCommandSource)}
+
 ${inputTemplate}
 
 ${aiAnswer || "..."}
 
----
-
-![AI Icon](icon.png?raycast-width=15&raycast-height=15) ${model.option} ${error || ""} ${isAborted ? "Canceled" : ""}
+${generateStatFooterSvg(model.option, isAborted ? "Canceled" : null, error)}
 `;
+}
+
+function generateTitleSvg(
+  title: string,
+  frontmostApp: Application | undefined,
+  usrInpSource: "none" | "clipboard" | "selectedText" | "browserTab" | undefined
+): string {
+  const appIconWidthHeight = 17;
+  const totalWidth = 700;
+  const titleWidth = totalWidth - appIconWidthHeight;
+
+  let appIcon = "";
+  let appIconPath = "";
+  if (usrInpSource === "clipboard") {
+    appIconPath = "clipboard.svg";
+  } else if (frontmostApp?.path) {
+    try {
+      appIconPath = getAppIconPath(frontmostApp.path).replace(/ /g, "%20");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (appIconPath) {
+    appIcon = `&#x200b;![App Icon](${appIconPath}?raycast-width=${appIconWidthHeight}&raycast-height=${appIconWidthHeight}) `;
+  }
+
+  const titleImage = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${titleWidth}" height="${appIconWidthHeight}" style="background: transparent;">
+  <style>
+    .text { 
+      font-size: 14px; 
+      fill: grey; 
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+    }
+  </style>
+  <text x="0" y="16" class="text">${title}</text>
+</svg>`;
+
+  return `${appIcon}![Command Name](data:image/svg+xml;base64,${Buffer.from(titleImage, "utf-8").toString("base64")})`;
+}
+
+function generateStatFooterSvg(model: string, warning: string | null, error: string | null) {
+  const charWidth = 7;
+  const textLength = (warning || error || "").length;
+  const textWidth = textLength * charWidth;
+  const modelIconWidthHeight = 15;
+  const totalWidth = 700;
+  const statWidth = totalWidth - modelIconWidthHeight;
+
+  const statImage = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${statWidth}" height="17" style="background: transparent;">
+  <style>
+    .model-text { 
+      font-size: 13px; 
+      fill: grey; 
+      font-family: Arial, sans-serif; 
+    }
+    .warning-text { 
+      font-size: 13px; 
+      fill: yellow; 
+      font-family: Arial, sans-serif; 
+    }
+    .error-text { 
+      font-size: 13px; 
+      fill: red; 
+      font-family: Arial, sans-serif; 
+    }
+  </style>
+  
+  <text x="5" y="16" class="model-text">${model}</text>
+
+  ${
+    error
+      ? `<text x="${statWidth - textWidth}" y="16" class="error-text">${error}</text>`
+      : warning
+      ? `<text x="${statWidth - textWidth}" y="16" class="warning-text">${warning}</text>`
+      : ""
+  }
+</svg>`;
+
+  const modelIcon = `&#x200b;![Model Icon](icon.png?raycast-width=${modelIconWidthHeight}&raycast-height=${modelIconWidthHeight})`;
+  return `${modelIcon}![Command Footer](data:image/svg+xml;base64,${Buffer.from(statImage, "utf-8").toString("base64")})`;
 }
 
 function buildModelNotFoundView(modelId: string) {
