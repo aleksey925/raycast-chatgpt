@@ -7,10 +7,6 @@ import plist from "plist";
  *
  * @param {string} appPath - The absolute path to the `.app` bundle of the macOS application.
  * @returns {string} - The absolute path to the application's icon file, typically with a `.icns` extension.
- * @throws {Error} - Throws an error if:
- *    - The `Info.plist` file is missing in the application's bundle.
- *    - The `CFBundleIconFile` key is not found in the `Info.plist`.
- *    - The icon file referenced in `CFBundleIconFile` does not exist.
  *
  * @example
  * const iconPath = getAppIconPath("/Applications/Safari.app");
