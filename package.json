@@ -124,12 +124,6 @@
           "placeholder": "What is it?"
         }
       ]
-    },
-    {
-      "name": "quick-ai-command",
-      "title": "Quick AI Command",
-      "description": "Entrypoint for obtaining answers from the target AI model",
-      "mode": "view"
     }
   ],
   "keywords": [

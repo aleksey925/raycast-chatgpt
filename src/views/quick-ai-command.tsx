@@ -9,14 +9,14 @@ import {
   List,
   open,
 } from "@raycast/api";
-import { useModel } from "./hooks/useModel";
-import { useChat } from "./hooks/useChat";
+import { useModel } from "../hooks/useModel";
+import { useChat } from "../hooks/useChat";
 import React, { useEffect, useState } from "react";
-import { canAccessBrowserExtension } from "./utils/browser";
-import { PrimaryAction } from "./actions";
-import { ChatHook, Model } from "./type";
-import { fetchContent } from "./utils/user-input";
-import { getAppIconPath } from "./utils/icon";
+import { canAccessBrowserExtension } from "../utils/browser";
+import { PrimaryAction } from "../actions";
+import { ChatHook, Model } from "../type";
+import { fetchContent } from "../utils/user-input";
+import { getAppIconPath } from "../utils/icon";
 
 export default function QuickAiCommand(props: LaunchProps) {
   const modelHook = useModel();
@@ -65,12 +65,6 @@ export default function QuickAiCommand(props: LaunchProps) {
     }
   }, [chat.streamData, chat.isLoading, chat.data]);
 
-  if (requestModelId === undefined) {
-    return DIRECT_CMD_LAUNCH_VIEW;
-  }
-  if (modelHook.isLoading) {
-    return <Detail markdown="" />;
-  }
   if (!model) {
     return buildModelNotFoundView(requestModelId);
   }
@@ -123,7 +117,7 @@ class QuickCommandViewBuilder {
       // Show user input as preformatted text because it allows the text to be displayed
       // exactly as it is. If we don't wrap it or format it as a quote, some symbols may be
       // rendered as Markdown markup.
-      inputTemplate = `\`\`\`\n${(this.userInput || "...")}\n\`\`\``;
+      inputTemplate = `\`\`\`\n${(this.userInput || "...").trim()}\n\`\`\``;
     }
 
     return `${this.generateTitleSvg(this.model.name)}
@@ -255,19 +249,11 @@ function buildModelNotFoundView(modelId: string) {
 function buildUnsupportedModelView(model_name: string) {
   return (
     <Detail
-      markdown={`Model ${model_name} is not suitable for quick commands. You need to set the "Quick command source" to use this model as a quick command.`}
+      markdown={`Model ${model_name} is not suitable for quick commands. You need to set the 
+      "Quick command source" to use this model as a quick command.`}
     />
   );
 }
-
-const DIRECT_CMD_LAUNCH_VIEW = (
-  <Detail
-    markdown={
-      "It is a meta command needed to create a 'Quicklink' for a model that will serve as a quick command." +
-      "You shouldn't run it manually."
-    }
-  />
-);
 
 const BROWSER_EXTENSION_NOT_AVAILABLE_VIEW = (
   <List
