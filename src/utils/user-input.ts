@@ -1,5 +1,6 @@
 import { Clipboard, getSelectedText } from "@raycast/api";
 import { getBrowserContent } from "./browser";
+import { getErrorMessage } from "./error";
 
 export async function fetchContent(source: "clipboard" | "selectedText" | "browserTab") {
   let content: string | null = null;
@@ -14,17 +15,17 @@ export async function fetchContent(source: "clipboard" | "selectedText" | "brows
       try {
         content = await getSelectedText();
       } catch (err) {
-        console.debug(error);
+        error = getErrorMessage(err, "No text selected. Ensure that the required application is in focus.");
       }
-      if (content === null) {
-        error = "No text selected. Select some text and run the command again.";
+      if (content !== null) {
+        error = null;
       }
     }
   } else {
     try {
       content = await getBrowserContent();
     } catch (err) {
-      error = "Could not connect to the Browser Extension. Make sure a Browser Tab is focused.";
+      error = getErrorMessage(err, "Could not connect to the Browser Extension. Make sure a Browser Tab is focused.");
     }
   }
 
