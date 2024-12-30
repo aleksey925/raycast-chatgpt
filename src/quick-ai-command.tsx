@@ -118,7 +118,10 @@ function buildViewContent(
 ): string {
   let inputTemplate = "";
   if (model.quickCommandIsDisplayInput) {
-    inputTemplate = `${userInput || "..."}\n\n---\n\n`;
+    inputTemplate = `${(userInput || "...")
+      .split("\n")
+      .map((line) => `> ${line}\n`)
+      .join("")}\n`;
   }
 
   return `${generateTitleSvg(model.name, frontmostApp, model?.quickCommandSource)}
@@ -211,7 +214,9 @@ function generateStatFooterSvg(model: string, warning: string | null, error: str
 </svg>`;
 
   const modelIcon = `&#x200b;![Model Icon](icon.png?raycast-width=${modelIconWidthHeight}&raycast-height=${modelIconWidthHeight})`;
-  return `${modelIcon}![Command Footer](data:image/svg+xml;base64,${Buffer.from(statImage, "utf-8").toString("base64")})`;
+  return `${modelIcon}![Command Footer](data:image/svg+xml;base64,${Buffer.from(statImage, "utf-8").toString(
+    "base64"
+  )})`;
 }
 
 function buildModelNotFoundView(modelId: string) {
