@@ -11,10 +11,10 @@ import {
 } from "@raycast/api";
 import { useModel } from "./hooks/useModel";
 import { useChat } from "./hooks/useChat";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { canAccessBrowserExtension } from "./utils/browser";
 import { PrimaryAction } from "./actions";
-import { Model } from "./type";
+import { ChatHook, Model } from "./type";
 import { fetchContent } from "./utils/user-input";
 import { getAppIconPath } from "./utils/icon";
 
@@ -25,7 +25,7 @@ export default function QuickAiCommand(props: LaunchProps) {
   const [userInput, setUserInput] = useState<string | null>(null);
   const [userInputError, setUserInputError] = useState<string | null>(null);
   const [userInputIsLoading, setUserInputIsLoading] = useState<boolean>(true);
-  const [frontmostApp, setFrontmostApp] = useState<Application>();
+  const [frontmostApp, setFrontmostApp] = useState<Application | null>(null);
 
   const requestModelId = props.launchContext?.modelId;
   const model = modelHook.data.find((model) => model.id === requestModelId);
@@ -80,86 +80,65 @@ export default function QuickAiCommand(props: LaunchProps) {
     return BROWSER_EXTENSION_NOT_AVAILABLE_VIEW;
   }
 
-  const content = buildViewContent(model, frontmostApp, userInput, aiAnswer, chat.isAborted, userInputError);
+  const viewBuilder = new QuickCommandViewBuilder(model, chat, frontmostApp, userInput, aiAnswer, userInputError);
 
-  const actions: JSX.Element[] = [];
-  if (!chat.isAborted) {
-    if (chat.isLoading) {
-      actions.push(<Action key="cancel" title="Cancel" icon={Icon.Stop} onAction={chat.abort} />);
-    } else {
-      const copyToClipboard = (
-        <Action.CopyToClipboard key="copyToClipboard" title={`Copy Response`} content={aiAnswer || ""} />
-      );
-      if (model?.quickCommandSource === "selectedText") {
-        actions.push(
-          <Action.Paste
-            key="pasteToActiveApp"
-            title={`Paste Response to ${frontmostApp ? frontmostApp.name : "Active App"}`}
-            content={aiAnswer || ""}
-            icon={frontmostApp ? { fileIcon: frontmostApp.path } : Icon.AppWindow}
-          />
-        );
-        actions.push(copyToClipboard);
-      } else {
-        actions.push(copyToClipboard);
-      }
-    }
-  }
-  return <Detail markdown={content} actions={<ActionPanel>{actions}</ActionPanel>} />;
+  return <Detail markdown={viewBuilder.buildContent()} actions={viewBuilder.buildActionPanel()} />;
 }
 
-function buildViewContent(
-  model: Model,
-  frontmostApp: Application | undefined,
-  userInput: string | null,
-  aiAnswer: string | null,
-  isAborted: boolean,
-  error: string | null
-): string {
-  let inputTemplate = "";
-  if (model.quickCommandIsDisplayInput) {
-    inputTemplate = `${(userInput || "...")
-      .split("\n")
-      .map((line) => `> ${line}\n`)
-      .join("")}\n`;
+class QuickCommandViewBuilder {
+  iconSizePx: number;
+  charWidthPx: number;
+  totalViewWidthPx: number;
+
+  model: Model;
+  chat: ChatHook;
+  frontmostApp: Application | null;
+  userInput: string | null;
+  aiAnswer: string | null;
+  error: string | null;
+
+  constructor(
+    model: Model,
+    chat: ChatHook,
+    frontmostApp: Application | null,
+    userInput: string | null,
+    aiAnswer: string | null,
+    error: string | null
+  ) {
+    this.totalViewWidthPx = 700;
+    this.iconSizePx = 17;
+    this.charWidthPx = 7;
+
+    this.model = model;
+    this.chat = chat;
+    this.frontmostApp = frontmostApp;
+    this.userInput = userInput;
+    this.aiAnswer = aiAnswer;
+    this.error = error;
   }
 
-  return `${generateTitleSvg(model.name, frontmostApp, model?.quickCommandSource)}
+  buildContent(): string {
+    let inputTemplate = "";
+    if (this.model.quickCommandIsDisplayInput) {
+      inputTemplate = `${(this.userInput || "...")
+        .split("\n")
+        .map((line) => `> ${line}\n`)
+        .join("")}\n`;
+    }
+
+    return `${this.generateTitleSvg(this.model.name)}
 
 ${inputTemplate}
 
-${aiAnswer || "..."}
+${this.aiAnswer || "..."}
 
-${generateStatFooterSvg(model.option, isAborted ? "Canceled" : null, error)}
-`;
-}
-
-function generateTitleSvg(
-  title: string,
-  frontmostApp: Application | undefined,
-  usrInpSource: "none" | "clipboard" | "selectedText" | "browserTab" | undefined
-): string {
-  const appIconWidthHeight = 17;
-  const totalWidth = 700;
-  const titleWidth = totalWidth - appIconWidthHeight;
-
-  let appIcon = "";
-  let appIconPath = "";
-  if (usrInpSource === "clipboard") {
-    appIconPath = "clipboard.svg";
-  } else if (frontmostApp?.path) {
-    try {
-      appIconPath = getAppIconPath(frontmostApp.path).replace(/ /g, "%20");
-    } catch (e) {
-      console.error(e);
-    }
-  }
-  if (appIconPath) {
-    appIcon = `&#x200b;![App Icon](${appIconPath}?raycast-width=${appIconWidthHeight}&raycast-height=${appIconWidthHeight}) `;
+${this.generateStatFooterSvg(this.model.option, this.chat.isAborted ? "Canceled" : null, this.error)}`;
   }
 
-  const titleImage = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${titleWidth}" height="${appIconWidthHeight}" style="background: transparent;">
+  generateTitleSvg(title: string): string {
+    const width = this.totalViewWidthPx - this.iconSizePx;
+    const titleImage = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${this.iconSizePx}" style="background: transparent;">
   <style>
     .text { 
       font-size: 14px; 
@@ -171,19 +150,18 @@ function generateTitleSvg(
   <text x="0" y="16" class="text">${title}</text>
 </svg>`;
 
-  return `${appIcon}![Command Name](data:image/svg+xml;base64,${Buffer.from(titleImage, "utf-8").toString("base64")})`;
-}
+    return `${this.getFrontmostAppIcon()}![CommandName](data:image/svg+xml;base64,${Buffer.from(
+      titleImage,
+      "utf-8"
+    ).toString("base64")})`;
+  }
 
-function generateStatFooterSvg(model: string, warning: string | null, error: string | null) {
-  const charWidth = 7;
-  const textLength = (warning || error || "").length;
-  const textWidth = textLength * charWidth;
-  const modelIconWidthHeight = 15;
-  const totalWidth = 700;
-  const statWidth = totalWidth - modelIconWidthHeight;
+  generateStatFooterSvg(model: string, warning: string | null, error: string | null) {
+    const textWidth = (warning || error || "").length * this.charWidthPx;
+    const width = this.totalViewWidthPx - this.iconSizePx;
 
-  const statImage = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${statWidth}" height="17" style="background: transparent;">
+    const statImage = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${this.iconSizePx}" style="background: transparent;">
   <style>
     .model-text { 
       font-size: 13px; 
@@ -202,21 +180,65 @@ function generateStatFooterSvg(model: string, warning: string | null, error: str
     }
   </style>
   
-  <text x="5" y="16" class="model-text">${model}</text>
+  <text x="5" y="14.5" class="model-text">${model}</text>
 
   ${
     error
-      ? `<text x="${statWidth - textWidth}" y="16" class="error-text">${error}</text>`
+      ? `<text x="${width - textWidth}" y="14.5" class="error-text">${error}</text>`
       : warning
-      ? `<text x="${statWidth - textWidth}" y="16" class="warning-text">${warning}</text>`
+      ? `<text x="${width - textWidth}" y="14.5" class="warning-text">${warning}</text>`
       : ""
   }
 </svg>`;
 
-  const modelIcon = `&#x200b;![Model Icon](icon.png?raycast-width=${modelIconWidthHeight}&raycast-height=${modelIconWidthHeight})`;
-  return `${modelIcon}![Command Footer](data:image/svg+xml;base64,${Buffer.from(statImage, "utf-8").toString(
-    "base64"
-  )})`;
+    const modelIcon = `&#x200b;![ModelIcon](icon.png?raycast-width=${this.iconSizePx}&raycast-height=${this.iconSizePx})`;
+    return `${modelIcon}![CommandFooter](data:image/svg+xml;base64,${Buffer.from(statImage, "utf-8").toString(
+      "base64"
+    )})`;
+  }
+
+  getFrontmostAppIcon(): string {
+    let appIconPath = "";
+    if (this.model.quickCommandSource === "clipboard") {
+      appIconPath = "clipboard.svg";
+    } else if (this.frontmostApp?.path) {
+      try {
+        appIconPath = getAppIconPath(this.frontmostApp.path).replace(/ /g, "%20");
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    const markdownIcon = `&#x200b;![AppIcon](${appIconPath}?raycast-width=${this.iconSizePx}&raycast-height=${this.iconSizePx}) `;
+    return appIconPath ? markdownIcon : "";
+  }
+
+  buildActionPanel(): React.JSX.Element {
+    const actions: React.JSX.Element[] = [];
+    if (!this.chat.isAborted) {
+      if (this.chat.isLoading) {
+        actions.push(<Action key="cancel" title="Cancel" icon={Icon.Stop} onAction={this.chat.abort} />);
+      } else {
+        const copyToClipboard = (
+          <Action.CopyToClipboard key="copyToClipboard" title={`Copy Response`} content={this.aiAnswer || ""} />
+        );
+        if (this.model?.quickCommandSource === "selectedText") {
+          actions.push(
+            <Action.Paste
+              key="pasteToActiveApp"
+              title={`Paste Response to ${this.frontmostApp ? this.frontmostApp.name : "Active App"}`}
+              content={this.aiAnswer || ""}
+              icon={this.frontmostApp ? { fileIcon: this.frontmostApp.path } : Icon.AppWindow}
+            />
+          );
+          actions.push(copyToClipboard);
+        } else {
+          actions.push(copyToClipboard);
+        }
+      }
+    }
+
+    return <ActionPanel>{actions}</ActionPanel>;
+  }
 }
 
 function buildModelNotFoundView(modelId: string) {
