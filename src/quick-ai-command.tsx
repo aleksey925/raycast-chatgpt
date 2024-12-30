@@ -120,10 +120,10 @@ class QuickCommandViewBuilder {
   buildContent(): string {
     let inputTemplate = "";
     if (this.model.quickCommandIsDisplayInput) {
-      inputTemplate = `${(this.userInput || "...")
-        .split("\n")
-        .map((line) => `> ${line}\n`)
-        .join("")}\n`;
+      // Show user input as preformatted text because it allows the text to be displayed
+      // exactly as it is. If we don't wrap it or format it as a quote, some symbols may be
+      // rendered as Markdown markup.
+      inputTemplate = `\`\`\`\n${(this.userInput || "...")}\n\`\`\``;
     }
 
     return `${this.generateTitleSvg(this.model.name)}
