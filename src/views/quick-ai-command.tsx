@@ -7,7 +7,9 @@ import {
   Icon,
   LaunchProps,
   List,
+  Navigation,
   open,
+  useNavigation,
 } from "@raycast/api";
 import { useModel } from "../hooks/useModel";
 import { useChat } from "../hooks/useChat";
@@ -17,8 +19,11 @@ import { PrimaryAction } from "../actions";
 import { ChatHook, Model } from "../type";
 import { fetchContent } from "../utils/user-input";
 import { getAppIconPath } from "../utils/icon";
+import Ask from "../ask";
+import { v4 as uuidv4 } from "uuid";
 
 export default function QuickAiCommand(props: LaunchProps) {
+  const navigation = useNavigation();
   const modelHook = useModel();
   const chat = useChat([]);
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
@@ -74,7 +79,15 @@ export default function QuickAiCommand(props: LaunchProps) {
     return BROWSER_EXTENSION_NOT_AVAILABLE_VIEW;
   }
 
-  const viewBuilder = new QuickCommandViewBuilder(model, chat, frontmostApp, userInput, aiAnswer, userInputError);
+  const viewBuilder = new QuickCommandViewBuilder(
+    model,
+    chat,
+    navigation,
+    frontmostApp,
+    userInput,
+    aiAnswer,
+    userInputError
+  );
 
   return <Detail markdown={viewBuilder.buildContent()} actions={viewBuilder.buildActionPanel()} />;
 }
@@ -86,6 +99,7 @@ class QuickCommandViewBuilder {
 
   model: Model;
   chat: ChatHook;
+  navigation: Navigation;
   frontmostApp: Application | null;
   userInput: string | null;
   aiAnswer: string | null;
@@ -94,6 +108,7 @@ class QuickCommandViewBuilder {
   constructor(
     model: Model,
     chat: ChatHook,
+    navigation: Navigation,
     frontmostApp: Application | null,
     userInput: string | null,
     aiAnswer: string | null,
@@ -105,6 +120,7 @@ class QuickCommandViewBuilder {
 
     this.model = model;
     this.chat = chat;
+    this.navigation = navigation;
     this.frontmostApp = frontmostApp;
     this.userInput = userInput;
     this.aiAnswer = aiAnswer;
@@ -228,6 +244,28 @@ ${this.generateStatFooterSvg(this.model.option, this.chat.isAborted ? "Canceled"
         } else {
           actions.push(copyToClipboard);
         }
+        actions.push(
+          <Action
+            key="continueInChat"
+            title="Continue in Chat"
+            icon={Icon.Message}
+            onAction={() => {
+              this.navigation.push(
+                <Ask
+                  conversation={{
+                    id: uuidv4(),
+                    chats: this.chat.data,
+                    model: this.model,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    pinned: false,
+                  }}
+                />
+              );
+            }}
+            shortcut={{ modifiers: ["cmd"], key: "j" }}
+          />
+        );
       }
     }
 

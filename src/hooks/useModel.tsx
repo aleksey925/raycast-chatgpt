@@ -26,7 +26,9 @@ export const DEFAULT_MODELS: Model[] = [
     created_at: new Date().toISOString(),
     name: "Fix Spelling and Grammar",
     prompt:
-      "You are an assistant that fixes spelling and grammar mistakes. Please don't insert any extra information; only provide the corrected text.",
+      "You are an assistant that fixes spelling and grammar mistakes. Please don't insert any " +
+      "extra information; only provide the corrected text. Answer additional questions that may " +
+      "arise after receiving the corrected text.",
     option: "gpt-4o-mini",
     temperature: "0.7",
     pinned: false,
