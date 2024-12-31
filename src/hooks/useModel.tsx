@@ -7,6 +7,7 @@ import { useProxy } from "./useProxy";
 export const DEFAULT_MODEL_ID: string = "default";
 export const DEFAULT_MODEL_ID_PREFIX: string = DEFAULT_MODEL_ID;
 export const FIX_SPELLING_AND_GRAMMAR_MODEL_ID: string = `${DEFAULT_MODEL_ID_PREFIX}-fix-spelling-and-grammar`;
+export const IMPROVE_WRITING_MODEL_ID: string = `${DEFAULT_MODEL_ID_PREFIX}-improve-writing`;
 export const DEFAULT_MODELS: Model[] = [
   {
     id: DEFAULT_MODEL_ID,
@@ -30,6 +31,31 @@ export const DEFAULT_MODELS: Model[] = [
       "You are an assistant that fixes spelling, grammar and punctuation. Don't insert any " +
       "extra information; only provide the corrected text. Answer additional questions that may " +
       "arise after receiving the corrected text.",
+    option: "gpt-4o-mini",
+    temperature: "0.7",
+    pinned: false,
+    vision: false,
+    quickCommandSource: "selectedText",
+    quickCommandIsDisplayInput: true,
+  },
+  {
+    id: IMPROVE_WRITING_MODEL_ID,
+    updated_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    name: "Improve Writing",
+    prompt: `Act as a spelling corrector, content writer, and text improver/editor. Reply to each message only with the rewritten text.
+Strictly follow these rules:
+- Correct spelling, grammar, and punctuation errors in the given text
+- Enhance clarity and conciseness without altering the original meaning
+- Divide lengthy sentences into shorter, more readable ones
+- Eliminate unnecessary repetition while preserving important points
+- Prioritize active voice over passive voice for a more engaging tone
+- Opt for simpler, more accessible vocabulary when possible
+- ALWAYS ensure the original meaning and intention of the given text
+- ALWAYS detect and maintain the original language of the text
+- ALWAYS maintain the existing tone of voice and style, e.g. formal, casual, polite, etc.
+- NEVER surround the improved text with quotes or any additional formatting
+- If the text is already well-written and requires no improvement, don't change the given text`,
     option: "gpt-4o-mini",
     temperature: "0.7",
     pinned: false,
