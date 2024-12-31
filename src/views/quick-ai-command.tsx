@@ -29,7 +29,6 @@ export default function QuickAiCommand(props: LaunchProps) {
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [userInput, setUserInput] = useState<string | null>(null);
   const [userInputError, setUserInputError] = useState<string | null>(null);
-  const [userInputIsLoading, setUserInputIsLoading] = useState<boolean>(true);
   const [frontmostApp, setFrontmostApp] = useState<Application | null>(null);
 
   const requestModelId = props.launchContext?.modelId;
@@ -50,16 +49,15 @@ export default function QuickAiCommand(props: LaunchProps) {
       const { content, error } = await fetchContent(model?.quickCommandSource);
       setUserInput(content);
       setUserInputError(error);
-      setUserInputIsLoading(false);
     })();
   }, [model]);
 
   useEffect(() => {
-    if (!userInputIsLoading && userInput && model) {
+    if (userInput && model) {
       setAiAnswer(null);
       chat.ask(userInput, [], model);
     }
-  }, [userInputIsLoading, userInput, model]);
+  }, [userInput, model]);
 
   useEffect(() => {
     if (!chat.streamData && !chat.isLoading && chat.data.length > 0) {
@@ -70,8 +68,11 @@ export default function QuickAiCommand(props: LaunchProps) {
     }
   }, [chat.streamData, chat.isLoading, chat.data]);
 
-  if (!model) {
+  if (!modelHook.isLoading && !model) {
     return buildModelNotFoundView(requestModelId);
+  }
+  if (!model) {
+    return <Detail markdown="" />;
   }
   if (model.quickCommandSource === "none" || model.quickCommandSource === undefined) {
     return buildUnsupportedModelView(model.name);

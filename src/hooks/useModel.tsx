@@ -6,6 +6,7 @@ import { useProxy } from "./useProxy";
 
 export const DEFAULT_MODEL_ID: string = "default";
 export const DEFAULT_MODEL_ID_PREFIX: string = DEFAULT_MODEL_ID;
+export const FIX_SPELLING_AND_GRAMMAR_MODEL_ID: string = `${DEFAULT_MODEL_ID_PREFIX}-fix-spelling-and-grammar`;
 export const DEFAULT_MODELS: Model[] = [
   {
     id: DEFAULT_MODEL_ID,
@@ -21,12 +22,12 @@ export const DEFAULT_MODELS: Model[] = [
     quickCommandIsDisplayInput: false,
   },
   {
-    id: `${DEFAULT_MODEL_ID_PREFIX}-fix-spelling-and-grammar`,
+    id: FIX_SPELLING_AND_GRAMMAR_MODEL_ID,
     updated_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
     name: "Fix Spelling and Grammar",
     prompt:
-      "You are an assistant that fixes spelling and grammar mistakes. Please don't insert any " +
+      "You are an assistant that fixes spelling, grammar and punctuation. Don't insert any " +
       "extra information; only provide the corrected text. Answer additional questions that may " +
       "arise after receiving the corrected text.",
     option: "gpt-4o-mini",

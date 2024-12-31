@@ -124,6 +124,13 @@
           "placeholder": "What is it?"
         }
       ]
+    },
+    {
+      "name": "fix-spelling-and-grammar",
+      "title": "Fix Spelling and Grammar",
+      "description": "Fix mistakes in a text",
+      "mode": "view",
+      "icon": "icon.png"
     }
   ],
   "keywords": [
