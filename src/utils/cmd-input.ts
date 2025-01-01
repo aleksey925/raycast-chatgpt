@@ -1,5 +1,4 @@
-import { Clipboard, getSelectedText } from "@raycast/api";
-import { getBrowserContent } from "./browser";
+import { BrowserExtension, Clipboard, getSelectedText } from "@raycast/api";
 import { getErrorMessage } from "./error";
 
 export async function fetchContent(source: "clipboard" | "selectedText" | "browserTab") {
@@ -23,7 +22,7 @@ export async function fetchContent(source: "clipboard" | "selectedText" | "brows
     }
   } else {
     try {
-      content = await getBrowserContent();
+      content = await BrowserExtension.getContent({ format: "markdown" });
     } catch (err) {
       error = getErrorMessage(err, "Could not connect to the Browser Extension. Make sure a Browser Tab is focused.");
     }

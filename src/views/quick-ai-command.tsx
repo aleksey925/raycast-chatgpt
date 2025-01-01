@@ -17,7 +17,7 @@ import React, { useEffect, useState } from "react";
 import { canAccessBrowserExtension } from "../utils/browser";
 import { PrimaryAction } from "../actions";
 import { ChatHook, Model } from "../type";
-import { fetchContent } from "../utils/user-input";
+import { fetchContent } from "../utils/cmd-input";
 import { getAppIconPath } from "../utils/icon";
 import Ask from "../ask";
 import { v4 as uuidv4 } from "uuid";
@@ -224,53 +224,61 @@ ${this.generateStatFooterSvg(this.model.option, this.chat.isAborted ? "Canceled"
   }
 
   buildActionPanel(): React.JSX.Element {
-    const actions: React.JSX.Element[] = [];
-    if (!this.chat.isAborted) {
-      if (this.chat.isLoading) {
-        actions.push(<Action key="cancel" title="Cancel" icon={Icon.Stop} onAction={this.chat.abort} />);
-      } else {
-        const copyToClipboard = (
-          <Action.CopyToClipboard key="copyToClipboard" title={`Copy Response`} content={this.aiAnswer || ""} />
-        );
-        if (this.model?.quickCommandSource === "selectedText") {
-          actions.push(
-            <Action.Paste
-              key="pasteToActiveApp"
-              title={`Paste Response to ${this.frontmostApp ? this.frontmostApp.name : "Active App"}`}
-              content={this.aiAnswer || ""}
-              icon={this.frontmostApp ? { fileIcon: this.frontmostApp.path } : Icon.AppWindow}
+    const cancel = <Action key="cancel" title="Cancel" icon={Icon.Stop} onAction={this.chat.abort} />;
+    const pasteToActiveApp = (
+      <Action.Paste
+        key="pasteToActiveApp"
+        title={`Paste Response to ${this.frontmostApp ? this.frontmostApp.name : "Active App"}`}
+        content={this.aiAnswer || ""}
+        icon={this.frontmostApp ? { fileIcon: this.frontmostApp.path } : Icon.AppWindow}
+      />
+    );
+    const copyToClipboard = (
+      <Action.CopyToClipboard key="copyToClipboard" title={`Copy Response`} content={this.aiAnswer || ""} />
+    );
+    const continueInChat = (
+      <Action
+        key="continueInChat"
+        title="Continue in Chat"
+        icon={Icon.Message}
+        onAction={() => {
+          this.navigation.push(
+            <Ask
+              conversation={{
+                id: uuidv4(),
+                chats: this.chat.data,
+                model: this.model,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                pinned: false,
+              }}
             />
           );
-          actions.push(copyToClipboard);
-        } else {
-          actions.push(copyToClipboard);
-        }
-        actions.push(
-          <Action
-            key="continueInChat"
-            title="Continue in Chat"
-            icon={Icon.Message}
-            onAction={() => {
-              this.navigation.push(
-                <Ask
-                  conversation={{
-                    id: uuidv4(),
-                    chats: this.chat.data,
-                    model: this.model,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    pinned: false,
-                  }}
-                />
-              );
-            }}
-            shortcut={{ modifiers: ["cmd"], key: "j" }}
-          />
-        );
+        }}
+        shortcut={{ modifiers: ["cmd"], key: "j" }}
+      />
+    );
+
+    const mainActions: React.JSX.Element[] = [];
+    const extraActions: React.JSX.Element[] = [];
+    if (this.chat.isLoading) {
+      mainActions.push(cancel);
+    } else {
+      if (this.model?.quickCommandSource === "selectedText") {
+        mainActions.push(pasteToActiveApp);
+        mainActions.push(copyToClipboard);
+      } else {
+        mainActions.push(copyToClipboard);
       }
+      extraActions.push(continueInChat);
     }
 
-    return <ActionPanel>{actions}</ActionPanel>;
+    return (
+      <ActionPanel>
+        <ActionPanel.Section>{mainActions}</ActionPanel.Section>
+        {extraActions ? <ActionPanel.Section>{extraActions}</ActionPanel.Section> : null}
+      </ActionPanel>
+    );
   }
 }
 
