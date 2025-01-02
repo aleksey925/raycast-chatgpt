@@ -2,13 +2,12 @@ import { Action, ActionPanel, Icon, List, useNavigation } from "@raycast/api";
 import { useState } from "react";
 import { DestructiveAction, PinAction } from "./actions";
 import { PreferencesActionSection } from "./actions/preferences";
-import { DEFAULT_MODELS, useModel } from "./hooks/useModel";
+import { DEFAULT_MODEL, useModel } from "./hooks/useModel";
 import { Model } from "./type";
 import { ModelForm } from "./views/model/form";
-import { ModelListView } from "./views/model/list";
+import { ModelListItem, ModelListView } from "./views/model/list";
 import { ExportData, ImportData } from "./utils/import-export";
 import { ImportForm } from "./views/import-form";
-import packageJson from "../package.json";
 
 export default function Model() {
   const models = useModel();
@@ -31,16 +30,6 @@ export default function Model() {
         icon={Icon.Text}
         onAction={() => push(<ModelForm name={searchText} use={{ models }} />)}
       />
-      {!model.quickCommandSource || model.quickCommandSource == "none" ? null : (
-        <Action.CreateQuicklink
-          quicklink={{
-            name: model.name,
-            link: `raycast://extensions/${packageJson.author}/${packageJson.name}/model?context=${encodeURIComponent(
-              JSON.stringify({ modelId: model.id })
-            )}`,
-          }}
-        />
-      )}
       <ActionPanel.Section title="Actions">
         <Action title={"Export Models"} icon={Icon.Upload} onAction={() => ExportData(models.data, "Models")} />
         <Action
@@ -59,18 +48,8 @@ export default function Model() {
             )
           }
         />
-        <DestructiveAction
-          title={"Reset Models"}
-          dialog={{
-            title:
-              "Are you sure? All your models will be deleted, and default models will be recreated with default values.",
-          }}
-          icon={Icon.Undo}
-          onAction={() => models.clear()}
-          shortcut={null}
-        />
       </ActionPanel.Section>
-      {!models.isDefaultModel(model.id) && (
+      {model.id !== "default" && (
         <>
           <PinAction
             title={model.pinned ? "Unpin Model" : "Pin Model"}
@@ -92,7 +71,9 @@ export default function Model() {
     </ActionPanel>
   );
 
-  const sortedModels = sortModels(models.data);
+  const sortedModels = models.data.sort(
+    (a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime()
+  );
 
   const filteredModels = sortedModels
     .filter((value, index, self) => index === self.findIndex((model) => model.id === value.id))
@@ -107,9 +88,9 @@ export default function Model() {
       );
     });
 
-  const defaultModelsOnly = filteredModels.filter((x) => models.isDefaultModel(x.id)) ?? DEFAULT_MODELS;
+  const defaultModelOnly = filteredModels.find((x) => x.id === DEFAULT_MODEL.id) ?? DEFAULT_MODEL;
 
-  const customModelsOnly = filteredModels.filter((x) => !models.isDefaultModel(x.id));
+  const customModelsOnly = filteredModels.filter((x) => x.id !== DEFAULT_MODEL.id);
 
   return (
     <List
@@ -131,9 +112,9 @@ export default function Model() {
         <List.EmptyView />
       ) : (
         <>
-          <ModelListView
+          <ModelListItem
             key="default"
-            models={defaultModelsOnly}
+            model={defaultModelOnly}
             selectedModel={selectedModelId}
             actionPanel={getActionPanel}
           />
@@ -155,12 +136,4 @@ export default function Model() {
       )}
     </List>
   );
-}
-
-function sortModels(models: Model[]): Model[] {
-  return models.sort((a, b) => {
-    if (a.name === "Default") return -1;
-    if (b.name === "Default") return 1;
-    return a.name.localeCompare(b.name);
-  });
 }

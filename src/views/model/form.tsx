@@ -5,11 +5,9 @@ import { CSVPrompt, Model, ModelHook } from "../../type";
 import { parse } from "csv-parse/sync";
 import { useCallback, useState } from "react";
 import { getConfiguration } from "../../hooks/useChatGPT";
-import { useModel } from "../../hooks/useModel";
 
 export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; name?: string }) => {
   const { use, model } = props;
-  const { isDefaultModel } = useModel();
   const { pop } = useNavigation();
   const { isCustomModel } = getConfiguration();
 
@@ -66,8 +64,6 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
       prompt: model?.prompt ?? "You are a helpful assistant.",
       pinned: model?.pinned ?? false,
       vision: model?.vision ?? false,
-      quickCommandSource: model?.quickCommandSource ?? "none",
-      quickCommandIsDisplayInput: model?.quickCommandIsDisplayInput ?? false,
     },
   });
 
@@ -134,9 +130,8 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
       )}
       <Form.TextArea title="Prompt" placeholder="Describe your prompt" {...itemProps.prompt} />
       <Form.TextField
-        title="Creativity"
-        placeholder="Set the required level of creativity (0 - 2)"
-        info="Concrete tasks, such as fixing grammar, require less creativity, while open-ended questions, such as generating ideas, require more."
+        title="Temperature"
+        placeholder="Set your sampling temperature (0 - 2)"
         {...itemProps.temperature}
       />
       {isCustomModel ? (
@@ -150,33 +145,7 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
       )}
 
       <Form.Checkbox title="Vision" label="Enable vision capabilities" {...itemProps.vision} />
-      {!isDefaultModel(model?.id || "") && <Form.Checkbox title="Pinned" label="Pin model" {...itemProps.pinned} />}
-      <Form.Separator />
-      <Form.Dropdown
-        title="Input source"
-        placeholder="Source of the data to be processed"
-        info={
-          "If you select the source, you will be able to create a command from this model that will function " +
-          "as a standard command. This command will be able to retrieve your data from the chosen " +
-          "source and process it according to your prompt."
-        }
-        {...itemProps.quickCommandSource}
-      >
-        <Form.Dropdown.Item value="none" title="none" />
-        <Form.Dropdown.Item value="selectedText" title="selectedText" />
-        <Form.Dropdown.Item value="clipboard" title="clipboard" />
-        <Form.Dropdown.Item value="browserTab" title="browserTab" />
-      </Form.Dropdown>
-      <Form.Checkbox
-        title="Display input"
-        label="Enable the display of user input"
-        info={
-          "If this option is enabled, user input will be displayed in the quick command view. " +
-          "This is useful when your quick command modifies data from the user, such as in " +
-          "the case of the command 'Fix Spelling and Grammar.'"
-        }
-        {...itemProps.quickCommandIsDisplayInput}
-      />
+      {model?.id !== "default" && <Form.Checkbox title="Pinned" label="Pin model" {...itemProps.pinned} />}
     </Form>
   );
 };

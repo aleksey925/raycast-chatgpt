@@ -39,8 +39,6 @@ export interface Model {
   temperature: string;
   pinned: boolean;
   vision?: boolean;
-  quickCommandSource?: "none" | "clipboard" | "selectedText" | "browserTab";
-  quickCommandIsDisplayInput?: boolean;
 }
 
 export type AiCommandContentSource = "clipboard" | "selectedText" | "browserTab";
@@ -85,10 +83,8 @@ export type QuestionHook = BaseHook<string> & { update: PromiseFunctionWithOneAr
 export type ModelHook = Hook<Model> & {
   setModels: PromiseFunctionWithOneArg<Model[]>;
   update: PromiseFunctionWithOneArg<Model>;
-  clear: PromiseFunctionNoArg;
   option: Model["option"][];
   isFetching: boolean;
-  isDefaultModel: (id: string) => boolean;
 };
 
 export interface ChatHook {

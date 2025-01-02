@@ -2,7 +2,7 @@ import { canAccessBrowserExtension } from "./utils/browser";
 import { Action, ActionPanel, Form, Icon, List, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { DEFAULT_MODEL_ID, DEFAULT_MODELS, useModel } from "./hooks/useModel";
+import { DEFAULT_MODEL, useModel } from "./hooks/useModel";
 import { showFailureToast } from "@raycast/utils";
 import { Conversation, Model } from "./type";
 import Ask from "./ask";
@@ -45,24 +45,24 @@ export default function Summarize() {
     setQuestion(content || "");
   }, [loading, content, browserError]);
 
-  const { data, isLoading: modelLoading, isDefaultModel } = useModel();
+  const { data, isLoading: modelLoading } = useModel();
 
-  const [defaultModels, setDefaultModels] = useState<Model[] | null>(null);
+  const [defaultModel, setDefaultModel] = useState<Model | null>(null);
   const [separateDefaultModel, setSeparateDefaultModel] = useState<Model[] | null>(null);
 
   useEffect(() => {
     if (!modelLoading) {
-      setSeparateDefaultModel(data.filter((x) => !isDefaultModel(x.id)));
-      setDefaultModels(data.filter((x) => isDefaultModel(x.id)) ?? DEFAULT_MODELS);
+      setSeparateDefaultModel(data.filter((x) => x.id !== "default"));
+      setDefaultModel(data.find((x) => x.id === "default") ?? DEFAULT_MODEL);
     }
   }, [modelLoading]);
 
-  const [selectedModelId, setSelectedModelId] = useState<string>(DEFAULT_MODEL_ID);
+  const [selectedModelId, setSelectedModelId] = useState<string>("default");
   const cache = new CacheAdapter("select_model");
 
   useEffect(() => {
     const selectModel = cache.get();
-    setSelectedModelId(selectModel || DEFAULT_MODEL_ID);
+    setSelectedModelId(selectModel || "default");
   }, []);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function Summarize() {
             title="Submit"
             icon={Icon.Checkmark}
             onAction={() => {
-              const chooseModel = data.find((x) => x.id === selectedModelId) || DEFAULT_MODELS[0];
+              const chooseModel = data.find((x) => x.id === selectedModelId) || DEFAULT_MODEL;
               // PS: Ask page back to Summarize is purely new conversation
               // we don't want to maintain the old conversation
               const conversation: Conversation = {
@@ -125,7 +125,7 @@ export default function Summarize() {
       />
       {
         // the value not match any values warning so annoying
-        (defaultModels || separateDefaultModel) && (
+        (defaultModel || separateDefaultModel) && (
           <Form.Dropdown
             id="model"
             title="Model"
@@ -133,8 +133,9 @@ export default function Summarize() {
             value={selectedModelId}
             onChange={setSelectedModelId}
           >
-            {defaultModels &&
-              defaultModels.map((model) => <Form.Dropdown.Item value={model.id} title={model.name} key={model.id} />)}
+            {defaultModel && (
+              <Form.Dropdown.Item key={defaultModel.id} title={defaultModel.name} value={defaultModel.id} />
+            )}
             <Form.Dropdown.Section title="Custom Models">
               {separateDefaultModel &&
                 separateDefaultModel.map((model) => (

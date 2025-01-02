@@ -7,7 +7,7 @@ export const ModelListView = ({
   selectedModel,
   actionPanel,
 }: {
-  title?: string;
+  title: string;
   models: Model[];
   selectedModel: string | null;
   actionPanel: (model: Model) => JSX.Element;
@@ -33,6 +33,7 @@ export const ModelListItem = ({
       id={model.id}
       key={model.id}
       title={model.name}
+      accessories={[{ text: new Date(model.updated_at ?? 0).toLocaleDateString() }]}
       detail={<ModelDetailView model={model} />}
       actions={selectedModel === model.id ? actionPanel(model) : undefined}
     />
@@ -58,12 +59,6 @@ const ModelDetailView = (props: { model: Model; markdown?: string | null | undef
             icon={icons[Math.min(Math.floor(t / 0.5), 3)]}
           />
           <List.Item.Detail.Metadata.Label title="Vision capabilities" text={model.vision ? "Enable" : "Disable"} />
-          <List.Item.Detail.Metadata.Separator />
-          <List.Item.Detail.Metadata.Label title="Quick command source" text={model?.quickCommandSource || "none"} />
-          <List.Item.Detail.Metadata.Label
-            title="Dispay of user input"
-            text={model.quickCommandIsDisplayInput ? "Enable" : "Disable"}
-          />
           <List.Item.Detail.Metadata.Separator />
           <List.Item.Detail.Metadata.Label title="ID" text={model.id} />
           <List.Item.Detail.Metadata.Label title="Updated at" text={new Date(model.updated_at ?? 0).toLocaleString()} />

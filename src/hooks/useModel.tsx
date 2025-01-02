@@ -4,80 +4,17 @@ import { Model, ModelHook } from "../type";
 import { getConfiguration, useChatGPT } from "./useChatGPT";
 import { useProxy } from "./useProxy";
 
-export const DEFAULT_MODEL_ID: string = "default";
-export const DEFAULT_MODEL_ID_PREFIX: string = DEFAULT_MODEL_ID;
-export const FIX_SPELLING_AND_GRAMMAR_MODEL_ID: string = `${DEFAULT_MODEL_ID_PREFIX}-fix-spelling-and-grammar`;
-export const IMPROVE_WRITING_MODEL_ID: string = `${DEFAULT_MODEL_ID_PREFIX}-improve-writing`;
-export const DEFAULT_MODELS: Model[] = [
-  {
-    id: DEFAULT_MODEL_ID,
-    updated_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    name: "Default",
-    prompt: "You are a helpful assistant.",
-    option: "gpt-4o-mini",
-    temperature: "1",
-    pinned: false,
-    vision: false,
-    quickCommandSource: "none",
-    quickCommandIsDisplayInput: false,
-  },
-  {
-    id: FIX_SPELLING_AND_GRAMMAR_MODEL_ID,
-    updated_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    name: "Fix Spelling and Grammar",
-    prompt:
-      "You are an assistant that fixes spelling, grammar and punctuation. Don't insert any " +
-      "extra information; only provide the corrected text. Answer additional questions that may " +
-      "arise after receiving the corrected text.",
-    option: "gpt-4o-mini",
-    temperature: "0.7",
-    pinned: false,
-    vision: false,
-    quickCommandSource: "selectedText",
-    quickCommandIsDisplayInput: true,
-  },
-  {
-    id: IMPROVE_WRITING_MODEL_ID,
-    updated_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    name: "Improve Writing",
-    prompt: `Act as a spelling corrector, content writer, and text improver/editor. Reply to each message only with the rewritten text.
-Strictly follow these rules:
-- Correct spelling, grammar, and punctuation errors in the given text
-- Enhance clarity and conciseness without altering the original meaning
-- Divide lengthy sentences into shorter, more readable ones
-- Eliminate unnecessary repetition while preserving important points
-- Prioritize active voice over passive voice for a more engaging tone
-- Opt for simpler, more accessible vocabulary when possible
-- ALWAYS ensure the original meaning and intention of the given text
-- ALWAYS detect and maintain the original language of the text
-- ALWAYS maintain the existing tone of voice and style, e.g. formal, casual, polite, etc.
-- NEVER surround the improved text with quotes or any additional formatting
-- If the text is already well-written and requires no improvement, don't change the given text`,
-    option: "gpt-4o-mini",
-    temperature: "0.7",
-    pinned: false,
-    vision: false,
-    quickCommandSource: "selectedText",
-    quickCommandIsDisplayInput: true,
-  },
-  {
-    id: `${DEFAULT_MODEL_ID_PREFIX}-summarize-webpage`,
-    updated_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    name: "Summarize Webpage",
-    prompt:
-      "Read and summarize the main ideas and key points from this text. Summarize the information concisely and clearly.",
-    option: "gpt-4o-mini",
-    temperature: "1",
-    pinned: false,
-    vision: false,
-    quickCommandSource: "browserTab",
-    quickCommandIsDisplayInput: false,
-  },
-];
+export const DEFAULT_MODEL: Model = {
+  id: "default",
+  updated_at: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  name: "Default",
+  prompt: "You are a helpful assistant.",
+  option: "gpt-4o-mini",
+  temperature: "1",
+  pinned: false,
+  vision: false,
+};
 
 export function useModel(): ModelHook {
   const [data, setData] = useState<Model[]>([]);
@@ -141,18 +78,12 @@ export function useModel(): ModelHook {
 
   useEffect(() => {
     (async () => {
-      const storedModels: Model[] = JSON.parse((await LocalStorage.getItem<string>("models")) || "[]");
+      const storedModels = await LocalStorage.getItem<string>("models");
 
-      if (storedModels.length === 0) {
-        setData(DEFAULT_MODELS);
+      if (!storedModels || storedModels === "[]") {
+        setData([DEFAULT_MODEL]);
       } else {
-        const allModels = [
-          ...storedModels,
-          ...DEFAULT_MODELS.filter(
-            (defaultModel) => !storedModels.some((model: Model) => model.id === defaultModel.id)
-          ),
-        ];
-        setData(allModels);
+        setData(JSON.parse(storedModels));
       }
       setLoading(false);
       isInitialMount.current = false;
@@ -211,10 +142,11 @@ export function useModel(): ModelHook {
 
   const clear = useCallback(async () => {
     const toast = await showToast({
-      title: "Clearing models...",
+      title: "Clearing your models ...",
       style: Toast.Style.Animated,
     });
-    setData(DEFAULT_MODELS);
+    const newModels: Model[] = data.filter((oldModel) => oldModel.id === DEFAULT_MODEL.id);
+    setData(newModels);
     toast.title = "Models cleared!";
     toast.style = Toast.Style.Success;
   }, [setData]);
@@ -226,12 +158,8 @@ export function useModel(): ModelHook {
     [setData]
   );
 
-  const isDefaultModel = useCallback((id: string): boolean => {
-    return DEFAULT_MODELS.some((defaultModel) => defaultModel.id === id);
-  }, []);
-
   return useMemo(
-    () => ({ data, isLoading, option, add, update, remove, clear, setModels, isFetching, isDefaultModel }),
-    [data, isLoading, option, add, update, remove, clear, setModels, isFetching, isDefaultModel]
+    () => ({ data, isLoading, option, add, update, remove, clear, setModels, isFetching }),
+    [data, isLoading, option, add, update, remove, clear, setModels, isFetching]
   );
 }
