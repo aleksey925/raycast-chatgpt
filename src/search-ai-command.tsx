@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Icon, LaunchProps, List, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Icon, LaunchProps, LaunchType, List, useNavigation } from "@raycast/api";
 import { useState } from "react";
 import { DestructiveAction } from "./actions";
 import { AiCommand } from "./type";
@@ -32,31 +32,48 @@ function SearchAiCommand() {
   const getActionPanel = (cmd: AiCommand) => (
     <ActionPanel>
       <Action
-        title={"Edit AI Command"}
-        shortcut={{ modifiers: ["cmd"], key: "e" }}
-        icon={Icon.Text}
-        onAction={() => navigation.push(<AiCommandForm cmd={cmd} use={{ commands }} />)}
+        title={"Open AI Command"}
+        icon={Icon.AppWindowSidebarRight}
+        onAction={() =>
+          navigation.push(
+            <Command
+              arguments={{}}
+              draftValues={{}}
+              launchType={LaunchType.UserInitiated}
+              launchContext={{ commandId: cmd.id }}
+            />
+          )
+        }
       />
-      <Action
-        title={"Create AI Command"}
-        shortcut={{ modifiers: ["cmd"], key: "n" }}
-        icon={Icon.Text}
-        onAction={() => navigation.push(<AiCommandForm name={searchText} use={{ commands }} />)}
-      />
-      <Action
-        title={"Duplicate AI Command"}
-        shortcut={{ modifiers: ["cmd"], key: "d" }}
-        icon={Icon.Text}
-        onAction={() => navigation.push(<AiCommandForm name={searchText} use={{ commands }} />)}
-      />
-      <Action.CreateQuicklink
-        quicklink={{
-          name: cmd.name,
-          link: `raycast://extensions/${packageJson.author}/${
-            packageJson.name
-          }/search-ai-command?context=${encodeURIComponent(JSON.stringify({ commandId: cmd.id }))}`,
-        }}
-      />
+
+      <ActionPanel.Section>
+        <Action
+          title={"Edit AI Command"}
+          shortcut={{ modifiers: ["cmd"], key: "e" }}
+          icon={Icon.Text}
+          onAction={() => navigation.push(<AiCommandForm cmd={cmd} use={{ commands }} />)}
+        />
+        <Action
+          title={"Create AI Command"}
+          shortcut={{ modifiers: ["cmd"], key: "n" }}
+          icon={Icon.Text}
+          onAction={() => navigation.push(<AiCommandForm use={{ commands }} />)}
+        />
+        <Action
+          title={"Duplicate AI Command"}
+          shortcut={{ modifiers: ["cmd"], key: "d" }}
+          icon={Icon.Text}
+          onAction={() => navigation.push(<AiCommandForm cmd={cmd} isNew={true} use={{ commands }} />)}
+        />
+        <Action.CreateQuicklink
+          quicklink={{
+            name: cmd.name,
+            link: `raycast://extensions/${packageJson.author}/${
+              packageJson.name
+            }/search-ai-command?context=${encodeURIComponent(JSON.stringify({ commandId: cmd.id }))}`,
+          }}
+        />
+      </ActionPanel.Section>
 
       <ActionPanel.Section>
         {!commands.isDefault(cmd.id) && (

@@ -6,7 +6,12 @@ import { AiCommand, AiCommandContentSource, AiCommandHook } from "../../type";
 import { getConfiguration } from "../../hooks/useChatGPT";
 import { useModel } from "../../hooks/useModel";
 
-export const AiCommandForm = (props: { cmd?: AiCommand; use: { commands: AiCommandHook }; name?: string }) => {
+export const AiCommandForm = (props: {
+  cmd?: AiCommand;
+  name?: string;
+  isNew?: boolean;
+  use: { commands: AiCommandHook };
+}) => {
   const { use, cmd } = props;
   const models = useModel();
   const navigation = useNavigation();
@@ -14,14 +19,13 @@ export const AiCommandForm = (props: { cmd?: AiCommand; use: { commands: AiComma
 
   const { handleSubmit, itemProps } = useForm<AiCommand>({
     onSubmit: async (command) => {
-      let updatedModel: AiCommand = { ...command };
-      updatedModel = { ...updatedModel, temperature: updatedModel.temperature };
-      if (props.cmd) {
+      const updatedCommand: AiCommand = { ...command };
+      if (props.cmd && props?.isNew !== true) {
         const toast = await showToast({
           title: "Update your AI command...",
           style: Toast.Style.Animated,
         });
-        use.commands.update({ ...updatedModel, id: props.cmd.id });
+        use.commands.update({ ...updatedCommand, id: props.cmd.id });
         toast.title = "AI command updated!";
         toast.style = Toast.Style.Success;
       } else {
@@ -30,7 +34,7 @@ export const AiCommandForm = (props: { cmd?: AiCommand; use: { commands: AiComma
           style: Toast.Style.Animated,
         });
         use.commands.add({
-          ...updatedModel,
+          ...updatedCommand,
           id: uuidv4(),
         });
         await showToast({
@@ -76,8 +80,8 @@ export const AiCommandForm = (props: { cmd?: AiCommand; use: { commands: AiComma
         </ActionPanel>
       }
     >
-      <Form.TextField title="Name" placeholder="Name your command" {...itemProps.name} />
-      <Form.TextArea title="Prompt" placeholder="Describe your prompt" {...itemProps.prompt} />
+      <Form.TextField title="Name" placeholder="Command name" {...itemProps.name} />
+      <Form.TextArea title="Prompt" placeholder="Describe what your command should do" {...itemProps.prompt} />
       <Form.TextField
         title="Creativity"
         placeholder="Set the required level of creativity (0 - 2)"
@@ -85,7 +89,7 @@ export const AiCommandForm = (props: { cmd?: AiCommand; use: { commands: AiComma
         {...itemProps.temperature}
       />
       {isCustomModel ? (
-        <Form.TextField title="Model" placeholder="Custom model name" {...itemProps.model} />
+        <Form.TextField title="Model" placeholder="Custom model" {...itemProps.model} />
       ) : (
         <Form.Dropdown title="Model" placeholder="Choose model" {...itemProps.model}>
           {models.option.map((option) => (
