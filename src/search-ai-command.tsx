@@ -1,9 +1,9 @@
 import { Action, ActionPanel, Icon, LaunchProps, LaunchType, List, useNavigation } from "@raycast/api";
 import { useState } from "react";
 import { DestructiveAction } from "./actions";
-import { AiCommand } from "./type";
+import { AiCommand, AiCommandHook } from "./type";
 import packageJson from "../package.json";
-import { useAiCommand } from "./hooks/useAiCommand";
+import { DEFAULT_AI_COMMANDS, useAiCommand } from "./hooks/useAiCommand";
 import { AiCommandForm, iconsByContentSource } from "./views/ai-command/from";
 import Command from "./views/ai-command/command";
 
@@ -82,17 +82,29 @@ function SearchAiCommand() {
             dialog={{
               title: "Are you sure you want to remove this AI command from your collection?",
             }}
+            icon={Icon.Trash}
             onAction={() => commands.remove(cmd)}
           />
         )}
+        {commands.isDefault(cmd.id) && (
+          <DestructiveAction
+            title="Reset"
+            dialog={{
+              title: "Are you sure you want to reset this action to its default settings?",
+            }}
+            icon={Icon.Repeat}
+            onAction={() => resetToDefaults(cmd, DEFAULT_AI_COMMANDS, commands)}
+            shortcut={null}
+          />
+        )}
         <DestructiveAction
-          title={"Reset"}
+          title={"Delete All"}
           dialog={{
             title:
               "Are you sure? All your custom AI commands will be deleted, and default AI commands will be recreated with their default values.",
           }}
-          icon={Icon.Undo}
-          onAction={() => commands.clear()}
+          icon={Icon.Trash}
+          onAction={commands.clear}
           shortcut={{ modifiers: ["shift", "ctrl"], key: "x" }}
         />
       </ActionPanel.Section>
@@ -161,4 +173,12 @@ function SearchAiCommand() {
       )}
     </List>
   );
+}
+
+
+function resetToDefaults(cmd: AiCommand, defaultCommands: AiCommand[], commands: AiCommandHook) {
+  const defaultCommand = defaultCommands.find((defaultCmd) => defaultCmd.id === cmd.id);
+  if (defaultCommand) {
+    commands.update(defaultCommand);
+  }
 }
