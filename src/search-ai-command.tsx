@@ -112,15 +112,17 @@ function SearchAiCommand() {
           ))}
       </List.Section>
       <List.Section title="Custom">
-        {filteredCommands.filter((cmd) => !commands.isDefault(cmd.id)).map((cmd) => (
-          <List.Item
-            id={cmd.id}
-            key={cmd.id}
-            title={cmd.name}
-            accessories={[{ icon: iconsByContentSource[cmd.contentSource] }, { text: cmd.model }]}
-            actions={selectedCommandId === cmd.id ? getActionPanel(cmd) : undefined}
-          />
-        ))}
+        {filteredCommands
+          .filter((cmd) => !commands.isDefault(cmd.id))
+          .map((cmd) => (
+            <List.Item
+              id={cmd.id}
+              key={cmd.id}
+              title={cmd.name}
+              accessories={[{ icon: iconsByContentSource[cmd.contentSource] }, { text: cmd.model }]}
+              actions={selectedCommandId === cmd.id ? getActionPanel(cmd) : undefined}
+            />
+          ))}
       </List.Section>
     </List>
   );
