@@ -50,19 +50,19 @@ function SearchAiCommand() {
         <Action
           title={"Edit AI Command"}
           shortcut={{ modifiers: ["cmd"], key: "e" }}
-          icon={Icon.Text}
+          icon={Icon.Pencil}
           onAction={() => navigation.push(<AiCommandForm cmd={cmd} use={{ commands }} />)}
         />
         <Action
           title={"Create AI Command"}
           shortcut={{ modifiers: ["cmd"], key: "n" }}
-          icon={Icon.Text}
+          icon={Icon.NewDocument}
           onAction={() => navigation.push(<AiCommandForm use={{ commands }} />)}
         />
         <Action
           title={"Duplicate AI Command"}
           shortcut={{ modifiers: ["cmd"], key: "d" }}
-          icon={Icon.Text}
+          icon={Icon.Duplicate}
           onAction={() => navigation.push(<AiCommandForm cmd={cmd} isNew={true} use={{ commands }} />)}
         />
         <Action.CreateQuicklink
@@ -141,6 +141,24 @@ function SearchAiCommand() {
             />
           ))}
       </List.Section>
+      {searchText !== "" && (
+        <List.Section title="Create New">
+          <List.Item
+            title={searchText}
+            subtitle="Create new AI Command"
+            icon={Icon.NewDocument}
+            actions={
+              <ActionPanel title="Create New">
+                <Action
+                  title="Create AI Command"
+                  icon={Icon.NewDocument}
+                  onAction={() => navigation.push(<AiCommandForm name={searchText} use={{ commands }} />)}
+                />
+              </ActionPanel>
+            }
+          />
+        </List.Section>
+      )}
     </List>
   );
 }
