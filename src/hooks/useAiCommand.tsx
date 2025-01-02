@@ -47,7 +47,7 @@ Strictly follow these rules:
     model: "gpt-4o-mini",
     temperature: "1",
     contentSource: "browserTab",
-    isDisplayInput: true,
+    isDisplayInput: false,
   },
 ];
 
