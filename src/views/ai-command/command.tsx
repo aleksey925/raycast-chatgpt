@@ -11,28 +11,28 @@ import {
   open,
   useNavigation,
 } from "@raycast/api";
-import { useModel } from "../hooks/useModel";
-import { useChat } from "../hooks/useChat";
+import { useChat } from "../../hooks/useChat";
 import React, { useEffect, useState } from "react";
-import { canAccessBrowserExtension } from "../utils/browser";
-import { PrimaryAction } from "../actions";
-import { ChatHook, Model } from "../type";
-import { fetchContent } from "../utils/cmd-input";
-import { getAppIconPath } from "../utils/icon";
-import Ask from "../ask";
+import { canAccessBrowserExtension } from "../../utils/browser";
+import { PrimaryAction } from "../../actions";
+import { AiCommand, ChatHook, Model } from "../../type";
+import { fetchContent } from "../../utils/cmd-input";
+import { getAppIconPath } from "../../utils/icon";
+import Ask from "../../ask";
 import { v4 as uuidv4 } from "uuid";
+import { useAiCommand } from "../../hooks/useAiCommand";
 
-export default function QuickAiCommand(props: LaunchProps) {
+export default function Command(props: LaunchProps) {
   const navigation = useNavigation();
-  const modelHook = useModel();
+  const commands = useAiCommand();
   const chat = useChat([]);
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [userInput, setUserInput] = useState<string | null>(null);
   const [userInputError, setUserInputError] = useState<string | null>(null);
   const [frontmostApp, setFrontmostApp] = useState<Application | null>(null);
 
-  const requestModelId = props.launchContext?.modelId;
-  const model = modelHook.data.find((model) => model.id === requestModelId);
+  const requestedCommandId = props.launchContext?.commandId;
+  const requestedCommand = commands.data.find((cmd) => cmd.id === requestedCommandId);
 
   useEffect(() => {
     getFrontmostApplication().then(setFrontmostApp);
@@ -40,24 +40,21 @@ export default function QuickAiCommand(props: LaunchProps) {
 
   useEffect(() => {
     (async () => {
-      if (!model) {
+      if (!requestedCommand) {
         return;
       }
-      if (model.quickCommandSource === "none" || model.quickCommandSource === undefined) {
-        return;
-      }
-      const { content, error } = await fetchContent(model?.quickCommandSource);
+      const { content, error } = await fetchContent(requestedCommand.contentSource);
       setUserInput(content);
       setUserInputError(error);
     })();
-  }, [model]);
+  }, [requestedCommand]);
 
   useEffect(() => {
-    if (userInput && model) {
+    if (userInput && requestedCommand) {
       setAiAnswer(null);
-      chat.ask(userInput, [], model);
+      chat.ask(userInput, [], modelFromCommand(requestedCommand));
     }
-  }, [userInput, model]);
+  }, [userInput, requestedCommand]);
 
   useEffect(() => {
     if (!chat.streamData && !chat.isLoading && chat.data.length > 0) {
@@ -68,20 +65,18 @@ export default function QuickAiCommand(props: LaunchProps) {
     }
   }, [chat.streamData, chat.isLoading, chat.data]);
 
-  if (!modelHook.isLoading && !model) {
-    return buildModelNotFoundView(requestModelId);
+  if (!commands.isLoading && !requestedCommand) {
+    return buildCommandNotFoundView(requestedCommandId);
   }
-  if (!model) {
+  if (!requestedCommand) {
     return <Detail markdown="" />;
   }
-  if (model.quickCommandSource === "none" || model.quickCommandSource === undefined) {
-    return buildUnsupportedModelView(model.name);
-  } else if (model.quickCommandSource === "browserTab" && !canAccessBrowserExtension()) {
+  if (requestedCommand.contentSource === "browserTab" && !canAccessBrowserExtension()) {
     return BROWSER_EXTENSION_NOT_AVAILABLE_VIEW;
   }
 
-  const viewBuilder = new QuickCommandViewBuilder(
-    model,
+  const viewBuilder = new AiCommandViewBuilder(
+    requestedCommand,
     chat,
     navigation,
     frontmostApp,
@@ -93,12 +88,12 @@ export default function QuickAiCommand(props: LaunchProps) {
   return <Detail markdown={viewBuilder.buildContent()} actions={viewBuilder.buildActionPanel()} />;
 }
 
-class QuickCommandViewBuilder {
+class AiCommandViewBuilder {
   iconSizePx: number;
   charWidthPx: number;
   totalViewWidthPx: number;
 
-  model: Model;
+  command: AiCommand;
   chat: ChatHook;
   navigation: Navigation;
   frontmostApp: Application | null;
@@ -107,7 +102,7 @@ class QuickCommandViewBuilder {
   error: string | null;
 
   constructor(
-    model: Model,
+    command: AiCommand,
     chat: ChatHook,
     navigation: Navigation,
     frontmostApp: Application | null,
@@ -119,7 +114,7 @@ class QuickCommandViewBuilder {
     this.iconSizePx = 17;
     this.charWidthPx = 7;
 
-    this.model = model;
+    this.command = command;
     this.chat = chat;
     this.navigation = navigation;
     this.frontmostApp = frontmostApp;
@@ -130,20 +125,20 @@ class QuickCommandViewBuilder {
 
   buildContent(): string {
     let inputTemplate = "";
-    if (this.model.quickCommandIsDisplayInput) {
+    if (this.command.isDisplayInput) {
       // Show user input as preformatted text because it allows the text to be displayed
       // exactly as it is. If we don't wrap it or format it as a quote, some symbols may be
       // rendered as Markdown markup.
       inputTemplate = `\`\`\`\n${(this.userInput || "...").trim()}\n\`\`\``;
     }
 
-    return `${this.generateTitleSvg(this.model.name)}
+    return `${this.generateTitleSvg(this.command.name)}
 
 ${inputTemplate}
 
 ${this.aiAnswer || "..."}
 
-${this.generateStatFooterSvg(this.model.option, this.chat.isAborted ? "Canceled" : null, this.error)}`;
+${this.generateStatFooterSvg(this.command.model, this.chat.isAborted ? "Canceled" : null, this.error)}`;
   }
 
   generateTitleSvg(title: string): string {
@@ -210,7 +205,7 @@ ${this.generateStatFooterSvg(this.model.option, this.chat.isAborted ? "Canceled"
 
   getFrontmostAppIcon(): string {
     let appIconPath = "";
-    if (this.model.quickCommandSource === "clipboard") {
+    if (this.command.contentSource === "clipboard") {
       appIconPath = "clipboard.svg";
     } else if (this.frontmostApp?.path) {
       try {
@@ -247,7 +242,7 @@ ${this.generateStatFooterSvg(this.model.option, this.chat.isAborted ? "Canceled"
               conversation={{
                 id: uuidv4(),
                 chats: this.chat.data,
-                model: this.model,
+                model: modelFromCommand(this.command),
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
                 pinned: false,
@@ -264,7 +259,7 @@ ${this.generateStatFooterSvg(this.model.option, this.chat.isAborted ? "Canceled"
     if (this.chat.isLoading) {
       mainActions.push(cancel);
     } else {
-      if (this.model?.quickCommandSource === "selectedText") {
+      if (this.command.contentSource === "selectedText") {
         mainActions.push(pasteToActiveApp);
         mainActions.push(copyToClipboard);
       } else {
@@ -282,22 +277,26 @@ ${this.generateStatFooterSvg(this.model.option, this.chat.isAborted ? "Canceled"
   }
 }
 
-function buildModelNotFoundView(modelId: string) {
+function modelFromCommand(command: AiCommand): Model {
+  return {
+    id: command.id,
+    name: command.name,
+    option: command.model,
+    prompt: command.prompt,
+    temperature: command.temperature,
+    pinned: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function buildCommandNotFoundView(commandId: string) {
   return (
     <Detail
       markdown={
-        `Model with id=${modelId} not found. This model may have been deleted.` +
-        `You need to remove this quick link, create the model again, and then create the quick link once more.`
+        `AI command with id=${commandId} not found. This AI command may have been deleted.` +
+        `You need to remove this quicklink, create the AI command again, and then create the quicklink once more.`
       }
-    />
-  );
-}
-
-function buildUnsupportedModelView(model_name: string) {
-  return (
-    <Detail
-      markdown={`Model ${model_name} is not suitable for quick commands. You need to set the 
-      "Quick command source" to use this model as a quick command.`}
     />
   );
 }

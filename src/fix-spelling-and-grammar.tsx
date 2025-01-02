@@ -1,7 +1,7 @@
-import QuickAiCommand from "./views/quick-ai-command";
-import { FIX_SPELLING_AND_GRAMMAR_MODEL_ID } from "./hooks/useModel";
+import Command from "./views/ai-command/command";
+import { FIX_SPELLING_AND_GRAMMAR_AI_COMMAND_ID } from "./hooks/useAiCommand";
 import { LaunchProps } from "@raycast/api";
 
 export default function FixSpellingAndGrammar(props: LaunchProps) {
-  return <QuickAiCommand {...props} launchContext={{ modelId: FIX_SPELLING_AND_GRAMMAR_MODEL_ID }} />;
+  return <Command {...props} launchContext={{ commandId: FIX_SPELLING_AND_GRAMMAR_AI_COMMAND_ID }} />;
 }

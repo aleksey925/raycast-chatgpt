@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Icon, LaunchProps, List, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, useNavigation } from "@raycast/api";
 import { useState } from "react";
 import { DestructiveAction, PinAction } from "./actions";
 import { PreferencesActionSection } from "./actions/preferences";
@@ -9,17 +9,8 @@ import { ModelListView } from "./views/model/list";
 import { ExportData, ImportData } from "./utils/import-export";
 import { ImportForm } from "./views/import-form";
 import packageJson from "../package.json";
-import QuickAiCommand from "./views/quick-ai-command";
 
-export default function ModelEntryPoint(props: LaunchProps) {
-  const requestModelId = props.launchContext?.modelId;
-  if (requestModelId) {
-    return <QuickAiCommand {...props} />;
-  }
-  return <Model />;
-}
-
-function Model() {
+export default function Model() {
   const models = useModel();
   const [searchText, setSearchText] = useState<string>("");
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);

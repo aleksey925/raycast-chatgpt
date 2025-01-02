@@ -126,6 +126,20 @@
       ]
     },
     {
+      "name": "create-ai-command",
+      "title": "Create AI Command",
+      "description": "Create new quick AI command",
+      "mode": "view",
+      "icon": "icon.png"
+    },
+    {
+      "name": "search-ai-command",
+      "title": "Search AI Command",
+      "description": "Search AI commands",
+      "mode": "view",
+      "icon": "icon.png"
+    },
+    {
       "name": "fix-spelling-and-grammar",
       "title": "Fix Spelling and Grammar",
       "description": "Fix mistakes in a text",

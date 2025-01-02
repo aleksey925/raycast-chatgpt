@@ -1,7 +1,7 @@
-import QuickAiCommand from "./views/quick-ai-command";
-import { IMPROVE_WRITING_MODEL_ID } from "./hooks/useModel";
+import Command from "./views/ai-command/command";
+import { IMPROVE_WRITING_AI_COMMAND_ID } from "./hooks/useAiCommand";
 import { LaunchProps } from "@raycast/api";
 
 export default function ImproveWriting(props: LaunchProps) {
-  return <QuickAiCommand {...props} launchContext={{ modelId: IMPROVE_WRITING_MODEL_ID }} />;
+  return <Command {...props} launchContext={{ commandId: IMPROVE_WRITING_AI_COMMAND_ID }} />;
 }

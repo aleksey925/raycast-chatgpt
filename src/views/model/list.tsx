@@ -1,6 +1,5 @@
 import { Icon, List } from "@raycast/api";
 import { Model } from "../../type";
-import { quickCommandSourceIcons, quickCommandSourceTitles } from "../../utils/views";
 
 export const ModelListView = ({
   title,
@@ -34,7 +33,6 @@ export const ModelListItem = ({
       id={model.id}
       key={model.id}
       title={model.name}
-      accessories={[{ icon: quickCommandSourceIcons[model?.quickCommandSource || "none"] }]}
       detail={<ModelDetailView model={model} />}
       actions={selectedModel === model.id ? actionPanel(model) : undefined}
     />
@@ -61,11 +59,7 @@ const ModelDetailView = (props: { model: Model; markdown?: string | null | undef
           />
           <List.Item.Detail.Metadata.Label title="Vision capabilities" text={model.vision ? "Enable" : "Disable"} />
           <List.Item.Detail.Metadata.Separator />
-          <List.Item.Detail.Metadata.Label
-            title="Quick command source"
-            text={quickCommandSourceTitles[model?.quickCommandSource || "none"]}
-            icon={quickCommandSourceIcons[model?.quickCommandSource || "none"]}
-          />
+          <List.Item.Detail.Metadata.Label title="Quick command source" text={model?.quickCommandSource || "none"} />
           <List.Item.Detail.Metadata.Label
             title="Dispay of user input"
             text={model.quickCommandIsDisplayInput ? "Enable" : "Disable"}

@@ -5,7 +5,6 @@ import { CSVPrompt, Model, ModelHook } from "../../type";
 import { parse } from "csv-parse/sync";
 import { useCallback, useState } from "react";
 import { getConfiguration } from "../../hooks/useChatGPT";
-import { quickCommandSourceIcons, quickCommandSourceTitles } from "../../utils/views";
 import { useModel } from "../../hooks/useModel";
 
 export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; name?: string }) => {
@@ -163,22 +162,10 @@ export const ModelForm = (props: { model?: Model; use: { models: ModelHook }; na
         }
         {...itemProps.quickCommandSource}
       >
-        <Form.Dropdown.Item value="none" title={quickCommandSourceTitles["none"]} />
-        <Form.Dropdown.Item
-          value="selectedText"
-          title={quickCommandSourceTitles["selectedText"]}
-          icon={quickCommandSourceIcons["selectedText"]}
-        />
-        <Form.Dropdown.Item
-          value="clipboard"
-          title={quickCommandSourceTitles["clipboard"]}
-          icon={quickCommandSourceIcons["clipboard"]}
-        />
-        <Form.Dropdown.Item
-          value="browserTab"
-          title={quickCommandSourceTitles["browserTab"]}
-          icon={quickCommandSourceIcons["browserTab"]}
-        />
+        <Form.Dropdown.Item value="none" title="none" />
+        <Form.Dropdown.Item value="selectedText" title="selectedText" />
+        <Form.Dropdown.Item value="clipboard" title="clipboard" />
+        <Form.Dropdown.Item value="browserTab" title="browserTab" />
       </Form.Dropdown>
       <Form.Checkbox
         title="Display input"

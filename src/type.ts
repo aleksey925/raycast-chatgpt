@@ -43,6 +43,18 @@ export interface Model {
   quickCommandIsDisplayInput?: boolean;
 }
 
+export type AiCommandContentSource = "clipboard" | "selectedText" | "browserTab";
+
+export interface AiCommand {
+  id: string;
+  name: string;
+  prompt: string;
+  model: string;
+  temperature: string;
+  contentSource: AiCommandContentSource;
+  isDisplayInput: boolean;
+}
+
 type FunctionNoArg = () => void;
 type PromiseFunctionNoArg = () => Promise<void>;
 type PromiseFunctionWithOneArg<T> = (arg: T) => Promise<void>;
@@ -92,6 +104,13 @@ export interface ChatHook {
   abort: FunctionNoArg;
   streamData: Chat | undefined;
 }
+
+export type AiCommandHook = Hook<AiCommand> & {
+  setCommand: PromiseFunctionWithOneArg<AiCommand[]>;
+  update: PromiseFunctionWithOneArg<AiCommand>;
+  clear: PromiseFunctionNoArg;
+  isDefault: (id: string) => boolean;
+};
 
 export interface ChangeModelProp {
   models: Model[];
