@@ -175,7 +175,6 @@ function SearchAiCommand() {
   );
 }
 
-
 function resetToDefaults(cmd: AiCommand, defaultCommands: AiCommand[], commands: AiCommandHook) {
   const defaultCommand = defaultCommands.find((defaultCmd) => defaultCmd.id === cmd.id);
   if (defaultCommand) {

@@ -15,12 +15,12 @@ import { useChat } from "../../hooks/useChat";
 import React, { useEffect, useState } from "react";
 import { canAccessBrowserExtension } from "../../utils/browser";
 import { PrimaryAction } from "../../actions";
-import { AiCommand, ChatHook, Model } from "../../type";
+import { AiCommand, ChatHook } from "../../type";
 import { fetchContent } from "../../utils/cmd-input";
 import { getAppIconPath } from "../../utils/icon";
 import Ask from "../../ask";
 import { v4 as uuidv4 } from "uuid";
-import { useAiCommand } from "../../hooks/useAiCommand";
+import { mapCommandToModel, useAiCommand } from "../../hooks/useAiCommand";
 
 export default function Command(props: LaunchProps) {
   const navigation = useNavigation();
@@ -52,7 +52,7 @@ export default function Command(props: LaunchProps) {
   useEffect(() => {
     if (userInput && requestedCommand) {
       setAiAnswer(null);
-      chat.ask(userInput, [], modelFromCommand(requestedCommand));
+      chat.ask(userInput, [], mapCommandToModel(requestedCommand));
     }
   }, [userInput, requestedCommand]);
 
@@ -242,7 +242,7 @@ ${this.generateStatFooterSvg(this.command.model, this.chat.isAborted ? "Canceled
               conversation={{
                 id: uuidv4(),
                 chats: this.chat.data,
-                model: modelFromCommand(this.command),
+                model: mapCommandToModel(this.command),
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
                 pinned: false,
@@ -275,19 +275,6 @@ ${this.generateStatFooterSvg(this.command.model, this.chat.isAborted ? "Canceled
       </ActionPanel>
     );
   }
-}
-
-function modelFromCommand(command: AiCommand): Model {
-  return {
-    id: command.id,
-    name: command.name,
-    option: command.model,
-    prompt: command.prompt,
-    temperature: command.temperature,
-    pinned: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
 }
 
 function buildCommandNotFoundView(commandId: string) {

@@ -1,7 +1,9 @@
 import { LocalStorage, showToast, Toast } from "@raycast/api";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { AiCommandHook, AiCommand } from "../type";
+import { AiCommandHook, AiCommand, Model } from "../type";
+import { useModel } from "./useModel";
 
+export const AI_COMMAND_MODEL_PREFIX = "command";
 export const DEFAULT_AI_COMMAND_ID_PREFIX: string = "default";
 export const FIX_SPELLING_AND_GRAMMAR_AI_COMMAND_ID: string = `${DEFAULT_AI_COMMAND_ID_PREFIX}-fix-spelling-and-grammar`;
 export const IMPROVE_WRITING_AI_COMMAND_ID: string = `${DEFAULT_AI_COMMAND_ID_PREFIX}-improve-writing`;
@@ -52,6 +54,7 @@ Strictly follow these rules:
 ];
 
 export function useAiCommand(): AiCommandHook {
+  const { add: addModel, update: updateModel, remove: removeModel } = useModel();
   const [data, setData] = useState<AiCommand[]>([]);
   const [isLoading, setLoading] = useState<boolean>(true);
   const isInitialMount = useRef(true);
@@ -62,6 +65,9 @@ export function useAiCommand(): AiCommandHook {
 
       if (storedCommands.length === 0) {
         setData(DEFAULT_AI_COMMANDS);
+        DEFAULT_AI_COMMANDS.forEach((cmd) => {
+          addModel(mapCommandToModel(cmd));
+        });
       } else {
         const allCommands = [
           ...storedCommands,
@@ -70,6 +76,9 @@ export function useAiCommand(): AiCommandHook {
           ),
         ];
         setData(allCommands);
+        allCommands.forEach((cmd) => {
+          addModel(mapCommandToModel(cmd));
+        });
       }
       setLoading(false);
       isInitialMount.current = false;
@@ -90,12 +99,12 @@ export function useAiCommand(): AiCommandHook {
         title: "Saving your AI command...",
         style: Toast.Style.Animated,
       });
-      const newCommand: AiCommand = { ...command };
-      setData([...data, newCommand]);
+      setData([...data, command]);
+      addModel(mapCommandToModel(command));
       toast.title = "AI command saved!";
       toast.style = Toast.Style.Success;
     },
-    [setData, data]
+    [addModel, setData, data]
   );
 
   const update = useCallback(
@@ -103,27 +112,28 @@ export function useAiCommand(): AiCommandHook {
       setData((prev) => {
         return prev.map((x) => {
           if (x.id === command.id) {
+            updateModel(mapCommandToModel(command));
             return command;
           }
           return x;
         });
       });
     },
-    [setData, data]
+    [updateModel, setData, data]
   );
 
   const remove = useCallback(
     async (command: AiCommand) => {
       const toast = await showToast({
-        title: "Remove your AI command...",
+        title: "Removing your AI command...",
         style: Toast.Style.Animated,
       });
-      const newAiCommands: AiCommand[] = data.filter((oldModel) => oldModel.id !== command.id);
-      setData(newAiCommands);
+      setData((prev) => prev.filter((x) => x.id !== command.id));
+      removeModel(mapCommandToModel(command));
       toast.title = "AI command removed!";
       toast.style = Toast.Style.Success;
     },
-    [setData, data]
+    [removeModel, setData, data]
   );
 
   const clear = useCallback(async () => {
@@ -131,10 +141,18 @@ export function useAiCommand(): AiCommandHook {
       title: "Clearing AI commands...",
       style: Toast.Style.Animated,
     });
+
+    data.forEach((cmd) => {
+      removeModel(mapCommandToModel(cmd));
+    });
+    DEFAULT_AI_COMMANDS.forEach((cmd) => {
+      addModel(mapCommandToModel(cmd));
+    });
     setData(DEFAULT_AI_COMMANDS);
+
     toast.title = "AI commands cleared!";
     toast.style = Toast.Style.Success;
-  }, [setData]);
+  }, [removeModel, setData, data]);
 
   const setCommand = useCallback(
     async (commands: AiCommand[]) => {
@@ -151,4 +169,17 @@ export function useAiCommand(): AiCommandHook {
     () => ({ data, isLoading, add, update, remove, clear, setCommand, isDefault }),
     [data, isLoading, add, update, remove, clear, setCommand, isDefault]
   );
+}
+
+export function mapCommandToModel(command: AiCommand): Model {
+  return {
+    id: `${AI_COMMAND_MODEL_PREFIX}-${command.id}`,
+    name: command.name,
+    option: command.model,
+    prompt: command.prompt,
+    temperature: command.temperature,
+    pinned: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 }

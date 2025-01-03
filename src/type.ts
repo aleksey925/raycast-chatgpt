@@ -80,12 +80,13 @@ export type ConversationsHook = Hook<Conversation> & { update: PromiseFunctionWi
 
 export type QuestionHook = BaseHook<string> & { update: PromiseFunctionWithOneArg<string> };
 
-export type ModelHook = Hook<Model> & {
-  setModels: PromiseFunctionWithOneArg<Model[]>;
-  update: PromiseFunctionWithOneArg<Model>;
-  option: Model["option"][];
-  isFetching: boolean;
-};
+export type ModelHook = BaseHook<Record<string, Model>> &
+  BaseFunctionHook<Model> & {
+    setModels: PromiseFunctionWithOneArg<Record<string, Model>>;
+    update: PromiseFunctionWithOneArg<Model>;
+    option: Model["option"][];
+    isFetching: boolean;
+  };
 
 export interface ChatHook {
   data: Chat[];

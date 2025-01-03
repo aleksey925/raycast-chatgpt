@@ -8,6 +8,7 @@ import { ModelForm } from "./views/model/form";
 import { ModelListItem, ModelListView } from "./views/model/list";
 import { ExportData, ImportData } from "./utils/import-export";
 import { ImportForm } from "./views/import-form";
+import { AI_COMMAND_MODEL_PREFIX } from "./hooks/useAiCommand";
 
 export default function Model() {
   const models = useModel();
@@ -18,12 +19,14 @@ export default function Model() {
 
   const getActionPanel = (model: Model) => (
     <ActionPanel>
-      <Action
-        title={"Edit Model"}
-        shortcut={{ modifiers: ["cmd"], key: "e" }}
-        icon={Icon.Text}
-        onAction={() => push(<ModelForm model={model} use={{ models }} />)}
-      />
+      {!model.id.startsWith(AI_COMMAND_MODEL_PREFIX) && (
+        <Action
+          title={"Edit Model"}
+          shortcut={{ modifiers: ["cmd"], key: "e" }}
+          icon={Icon.Text}
+          onAction={() => push(<ModelForm model={model} use={{ models }} />)}
+        />
+      )}
       <Action
         title={"Create Model"}
         shortcut={{ modifiers: ["cmd"], key: "n" }}
@@ -41,7 +44,7 @@ export default function Model() {
                 moduleName="Models"
                 onSubmit={async (file) => {
                   ImportData<Model>("models", file).then((data) => {
-                    models.setModels(data);
+                    models.setModels(data.reduce((acc, model) => ({ ...acc, [model.id]: model }), {}));
                   });
                 }}
               />
@@ -49,7 +52,7 @@ export default function Model() {
           }
         />
       </ActionPanel.Section>
-      {model.id !== "default" && (
+      {model.id !== "default" && !model.id.startsWith(AI_COMMAND_MODEL_PREFIX) && (
         <>
           <PinAction
             title={model.pinned ? "Unpin Model" : "Pin Model"}
@@ -71,7 +74,7 @@ export default function Model() {
     </ActionPanel>
   );
 
-  const sortedModels = models.data.sort(
+  const sortedModels = Object.values(models.data).sort(
     (a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime()
   );
 
@@ -90,7 +93,13 @@ export default function Model() {
 
   const defaultModelOnly = filteredModels.find((x) => x.id === DEFAULT_MODEL.id) ?? DEFAULT_MODEL;
 
-  const customModelsOnly = filteredModels.filter((x) => x.id !== DEFAULT_MODEL.id);
+  const commandModelsOnly = filteredModels.filter(
+    (x) => x.id !== DEFAULT_MODEL.id && x.id.startsWith(AI_COMMAND_MODEL_PREFIX)
+  );
+
+  const customModelsOnly = filteredModels.filter(
+    (x) => x.id !== DEFAULT_MODEL.id && !x.id.startsWith(AI_COMMAND_MODEL_PREFIX)
+  );
 
   return (
     <List
@@ -129,6 +138,13 @@ export default function Model() {
             key="models"
             title="Models"
             models={customModelsOnly.filter((x) => !x.pinned)}
+            selectedModel={selectedModelId}
+            actionPanel={getActionPanel}
+          />
+          <ModelListView
+            key="ai-commands"
+            title="AI Commands"
+            models={commandModelsOnly}
             selectedModel={selectedModelId}
             actionPanel={getActionPanel}
           />
