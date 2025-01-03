@@ -34,7 +34,7 @@ export function useConversations(): ConversationsHook {
         });
       }
     },
-    [setData, data]
+    [setData, data],
   );
 
   const update = useCallback(
@@ -48,7 +48,7 @@ export function useConversations(): ConversationsHook {
         });
       });
     },
-    [setData, data]
+    [setData, data],
   );
 
   const remove = useCallback(
@@ -62,7 +62,7 @@ export function useConversations(): ConversationsHook {
       toast.title = "Conversation removed!";
       toast.style = Toast.Style.Success;
     },
-    [setData, data]
+    [setData, data],
   );
 
   const clear = useCallback(async () => {
@@ -77,6 +77,6 @@ export function useConversations(): ConversationsHook {
 
   return useMemo(
     () => ({ data, isLoading, add, update, remove, clear }),
-    [data, isLoading, add, update, remove, clear]
+    [data, isLoading, add, update, remove, clear],
   );
 }

@@ -41,6 +41,19 @@ export interface Model {
   vision?: boolean;
 }
 
+export type AiCommandContentSource = "clipboard" | "selectedText" | "browserTab";
+
+export interface AiCommand {
+  id: string;
+  name: string;
+  prompt: string;
+  model: string;
+  temperature: string;
+  contentSource: AiCommandContentSource;
+  isDisplayInput: boolean;
+}
+
+type FunctionNoArg = () => void;
 type PromiseFunctionNoArg = () => Promise<void>;
 type PromiseFunctionWithOneArg<T> = (arg: T) => Promise<void>;
 // type PromiseFunctionWithTwoArg<T, V> = (arg_1: T, arg_2: V) => Promise<void>;
@@ -67,24 +80,35 @@ export type ConversationsHook = Hook<Conversation> & { update: PromiseFunctionWi
 
 export type QuestionHook = BaseHook<string> & { update: PromiseFunctionWithOneArg<string> };
 
-export type ModelHook = Hook<Model> & {
-  setModels: PromiseFunctionWithOneArg<Model[]>;
-  update: PromiseFunctionWithOneArg<Model>;
-  option: Model["option"][];
-  isFetching: boolean;
-};
+export type ModelHook = BaseHook<Record<string, Model>> &
+  BaseFunctionHook<Model> & {
+    setModels: PromiseFunctionWithOneArg<Record<string, Model>>;
+    update: PromiseFunctionWithOneArg<Model>;
+    option: Model["option"][];
+    isFetching: boolean;
+  };
 
 export interface ChatHook {
   data: Chat[];
   setData: Set<Chat[]>;
   isLoading: boolean;
+  isAborted: boolean;
   setLoading: Set<boolean>;
   selectedChatId: string | null;
   setSelectedChatId: Set<string | null>;
   ask: PromiseFunctionWithThreeArg<string, string[], Model>;
   clear: PromiseFunctionNoArg;
+  abort: FunctionNoArg;
   streamData: Chat | undefined;
 }
+
+export type AiCommandHook = BaseHook<Record<string, AiCommand>> &
+  BaseFunctionHook<AiCommand> & {
+    setCommand: PromiseFunctionWithOneArg<Record<string, AiCommand>>;
+    update: PromiseFunctionWithOneArg<AiCommand>;
+    clear: PromiseFunctionNoArg;
+    isDefault: (id: string) => boolean;
+  };
 
 export interface ChangeModelProp {
   models: Model[];
