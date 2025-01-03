@@ -21,7 +21,7 @@ function SearchAiCommand() {
   const [searchText, setSearchText] = useState<string>("");
   const [selectedCommandId, setSelectedCommandId] = useState<string | null>(null);
 
-  const sortedCommands = commands.data.sort((a, b) => a.name.localeCompare(b.name));
+  const sortedCommands = Object.values(commands.data).sort((a, b) => a.name.localeCompare(b.name));
   const filteredCommands = sortedCommands
     .filter((value, index, self) => index === self.findIndex((cmd) => cmd.id === value.id))
     .filter((cmd) => {
@@ -175,8 +175,8 @@ function SearchAiCommand() {
   );
 }
 
-function resetToDefaults(cmd: AiCommand, defaultCommands: AiCommand[], commands: AiCommandHook) {
-  const defaultCommand = defaultCommands.find((defaultCmd) => defaultCmd.id === cmd.id);
+function resetToDefaults(cmd: AiCommand, defaultCommands: Record<string, AiCommand>, commands: AiCommandHook) {
+  const defaultCommand = defaultCommands[cmd.id];
   if (defaultCommand) {
     commands.update(defaultCommand);
   }

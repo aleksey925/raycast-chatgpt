@@ -32,7 +32,7 @@ export default function Command(props: LaunchProps) {
   const [frontmostApp, setFrontmostApp] = useState<Application | null>(null);
 
   const requestedCommandId = props.launchContext?.commandId;
-  const requestedCommand = commands.data.find((cmd) => cmd.id === requestedCommandId);
+  const requestedCommand = commands.data[requestedCommandId];
 
   useEffect(() => {
     getFrontmostApplication().then(setFrontmostApp);

@@ -102,12 +102,13 @@ export interface ChatHook {
   streamData: Chat | undefined;
 }
 
-export type AiCommandHook = Hook<AiCommand> & {
-  setCommand: PromiseFunctionWithOneArg<AiCommand[]>;
-  update: PromiseFunctionWithOneArg<AiCommand>;
-  clear: PromiseFunctionNoArg;
-  isDefault: (id: string) => boolean;
-};
+export type AiCommandHook = BaseHook<Record<string, AiCommand>> &
+  BaseFunctionHook<AiCommand> & {
+    setCommand: PromiseFunctionWithOneArg<Record<string, AiCommand>>;
+    update: PromiseFunctionWithOneArg<AiCommand>;
+    clear: PromiseFunctionNoArg;
+    isDefault: (id: string) => boolean;
+  };
 
 export interface ChangeModelProp {
   models: Model[];
