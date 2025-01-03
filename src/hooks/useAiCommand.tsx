@@ -63,7 +63,7 @@ export function useAiCommand(): AiCommandHook {
   useEffect(() => {
     (async () => {
       const storedCommands: Record<string, AiCommand> = JSON.parse(
-        (await LocalStorage.getItem<string>("aiCommands")) || "{}"
+        (await LocalStorage.getItem<string>("aiCommands")) || "{}",
       );
 
       if (Object.keys(storedCommands).length === 0) {
@@ -107,7 +107,7 @@ export function useAiCommand(): AiCommandHook {
       toast.title = "AI command saved!";
       toast.style = Toast.Style.Success;
     },
-    [addModel, setData, data]
+    [addModel, setData, data],
   );
 
   const update = useCallback(
@@ -127,7 +127,7 @@ export function useAiCommand(): AiCommandHook {
       toast.title = "AI command updated!";
       toast.style = Toast.Style.Success;
     },
-    [updateModel, setData, data]
+    [updateModel, setData, data],
   );
 
   const remove = useCallback(
@@ -145,7 +145,7 @@ export function useAiCommand(): AiCommandHook {
       toast.title = "AI command removed!";
       toast.style = Toast.Style.Success;
     },
-    [removeModel, setData, data]
+    [removeModel, setData, data],
   );
 
   const clear = useCallback(async () => {
@@ -170,7 +170,7 @@ export function useAiCommand(): AiCommandHook {
     async (commands: Record<string, AiCommand>) => {
       setData(commands);
     },
-    [setData]
+    [setData],
   );
 
   const isDefault = useCallback((id: string): boolean => {
@@ -179,7 +179,7 @@ export function useAiCommand(): AiCommandHook {
 
   return useMemo(
     () => ({ data, isLoading, add, update, remove, clear, setCommand, isDefault }),
-    [data, isLoading, add, update, remove, clear, setCommand, isDefault]
+    [data, isLoading, add, update, remove, clear, setCommand, isDefault],
   );
 }
 

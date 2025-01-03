@@ -65,7 +65,7 @@ export function useModel(): ModelHook {
                   title: "Error",
                   message: err.message,
                   style: Toast.Style.Failure,
-                }
+                },
           );
         })
         .finally(() => {
@@ -79,7 +79,7 @@ export function useModel(): ModelHook {
   useEffect(() => {
     (async () => {
       const storedModels: Model[] | Record<string, Model> = JSON.parse(
-        (await LocalStorage.getItem<string>("models")) || "{}"
+        (await LocalStorage.getItem<string>("models")) || "{}",
       );
       const storedModelsLength = ((models: Record<string, Model> | Model[]): number =>
         Array.isArray(models) ? models.length : Object.keys(models).length)(storedModels);
@@ -121,7 +121,7 @@ export function useModel(): ModelHook {
       toast.title = "Model saved!";
       toast.style = Toast.Style.Success;
     },
-    [setData]
+    [setData],
   );
 
   const update = useCallback(
@@ -141,7 +141,7 @@ export function useModel(): ModelHook {
       toast.title = "Model updated!";
       toast.style = Toast.Style.Success;
     },
-    [setData]
+    [setData],
   );
 
   const remove = useCallback(
@@ -158,7 +158,7 @@ export function useModel(): ModelHook {
       toast.title = "Model removed!";
       toast.style = Toast.Style.Success;
     },
-    [setData]
+    [setData],
   );
 
   const clear = useCallback(async () => {
@@ -175,11 +175,11 @@ export function useModel(): ModelHook {
     async (models: Record<string, Model>) => {
       setData(models);
     },
-    [setData]
+    [setData],
   );
 
   return useMemo(
     () => ({ data, isLoading, option, add, update, remove, clear, setModels, isFetching }),
-    [data, isLoading, option, add, update, remove, clear, setModels, isFetching]
+    [data, isLoading, option, add, update, remove, clear, setModels, isFetching],
   );
 }

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { DestructiveAction, PinAction } from "./actions";
 import { PreferencesActionSection } from "./actions/preferences";
 import { DEFAULT_MODEL, useModel } from "./hooks/useModel";
-import { Model } from "./type";
+import { Model as ModelType } from "./type";
 import { ModelForm } from "./views/model/form";
 import { ModelListItem, ModelListView } from "./views/model/list";
 import { ExportData, ImportData } from "./utils/import-export";
@@ -17,7 +17,7 @@ export default function Model() {
 
   const { push } = useNavigation();
 
-  const getActionPanel = (model: Model) => (
+  const getActionPanel = (model: ModelType) => (
     <ActionPanel>
       {!model.id.startsWith(AI_COMMAND_MODEL_PREFIX) && (
         <Action
@@ -43,11 +43,11 @@ export default function Model() {
               <ImportForm
                 moduleName="Models"
                 onSubmit={async (file) => {
-                  ImportData<Model>("models", file).then((data) => {
+                  ImportData<ModelType>("models", file).then((data) => {
                     models.setModels(data.reduce((acc, model) => ({ ...acc, [model.id]: model }), {}));
                   });
                 }}
-              />
+              />,
             )
           }
         />
@@ -75,7 +75,7 @@ export default function Model() {
   );
 
   const sortedModels = Object.values(models.data).sort(
-    (a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime()
+    (a, b) => new Date(b.updated_at ?? 0).getTime() - new Date(a.updated_at ?? 0).getTime(),
   );
 
   const filteredModels = sortedModels
@@ -94,11 +94,11 @@ export default function Model() {
   const defaultModelOnly = filteredModels.find((x) => x.id === DEFAULT_MODEL.id) ?? DEFAULT_MODEL;
 
   const commandModelsOnly = filteredModels.filter(
-    (x) => x.id !== DEFAULT_MODEL.id && x.id.startsWith(AI_COMMAND_MODEL_PREFIX)
+    (x) => x.id !== DEFAULT_MODEL.id && x.id.startsWith(AI_COMMAND_MODEL_PREFIX),
   );
 
   const customModelsOnly = filteredModels.filter(
-    (x) => x.id !== DEFAULT_MODEL.id && !x.id.startsWith(AI_COMMAND_MODEL_PREFIX)
+    (x) => x.id !== DEFAULT_MODEL.id && !x.id.startsWith(AI_COMMAND_MODEL_PREFIX),
   );
 
   return (

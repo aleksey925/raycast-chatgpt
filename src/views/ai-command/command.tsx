@@ -82,7 +82,7 @@ export default function Command(props: LaunchProps) {
     frontmostApp,
     userInput,
     aiAnswer,
-    userInputError
+    userInputError,
   );
 
   return <Detail markdown={viewBuilder.buildContent()} actions={viewBuilder.buildActionPanel()} />;
@@ -108,7 +108,7 @@ class AiCommandViewBuilder {
     frontmostApp: Application | null,
     userInput: string | null,
     aiAnswer: string | null,
-    error: string | null
+    error: string | null,
   ) {
     this.totalViewWidthPx = 700;
     this.iconSizePx = 17;
@@ -158,7 +158,7 @@ ${this.generateStatFooterSvg(this.command.model, this.chat.isAborted ? "Canceled
 
     return `${this.getFrontmostAppIcon()}![CommandName](data:image/svg+xml;base64,${Buffer.from(
       titleImage,
-      "utf-8"
+      "utf-8",
     ).toString("base64")})`;
   }
 
@@ -192,14 +192,14 @@ ${this.generateStatFooterSvg(this.command.model, this.chat.isAborted ? "Canceled
     error
       ? `<text x="${width - textWidth}" y="14.5" class="error-text">${error}</text>`
       : warning
-      ? `<text x="${width - textWidth}" y="14.5" class="warning-text">${warning}</text>`
-      : ""
+        ? `<text x="${width - textWidth}" y="14.5" class="warning-text">${warning}</text>`
+        : ""
   }
 </svg>`;
 
     const modelIcon = `&#x200b;![ModelIcon](icon.png?raycast-width=${this.iconSizePx}&raycast-height=${this.iconSizePx})`;
     return `${modelIcon}![CommandFooter](data:image/svg+xml;base64,${Buffer.from(statImage, "utf-8").toString(
-      "base64"
+      "base64",
     )})`;
   }
 
@@ -247,7 +247,7 @@ ${this.generateStatFooterSvg(this.command.model, this.chat.isAborted ? "Canceled
                 updated_at: new Date().toISOString(),
                 pinned: false,
               }}
-            />
+            />,
           );
         }}
         shortcut={{ modifiers: ["cmd"], key: "j" }}

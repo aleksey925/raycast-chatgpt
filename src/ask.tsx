@@ -38,13 +38,13 @@ export default function Ask(props: { conversation?: Conversation; initialQuestio
       pinned: false,
       updated_at: "",
       created_at: new Date().toISOString(),
-    }
+    },
   );
 
   const [isLoading, setLoading] = useState<boolean>(true);
 
   const [selectedModelId, setSelectedModelId] = useState<string>(
-    props.conversation ? props.conversation.model.id : "default"
+    props.conversation ? props.conversation.model.id : "default",
   );
 
   const [{ isAutoFullInput, isAutoLoadText }] = useState(() => {
@@ -88,7 +88,7 @@ export default function Ask(props: { conversation?: Conversation; initialQuestio
           selectedModel={selectedModelId}
           onModelChange={setSelectedModelId}
           isFirstCall={conversation.chats.length === 0}
-        />
+        />,
       );
     }
 

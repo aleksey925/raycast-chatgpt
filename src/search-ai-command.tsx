@@ -41,7 +41,7 @@ function SearchAiCommand() {
               draftValues={{}}
               launchType={LaunchType.UserInitiated}
               launchContext={{ commandId: cmd.id }}
-            />
+            />,
           )
         }
       />

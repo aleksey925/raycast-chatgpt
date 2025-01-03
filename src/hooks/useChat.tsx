@@ -91,7 +91,7 @@ export function useChat<T extends Chat>(props: T[]): ChatHook {
           query: { ...getHeaders().params },
           headers: { ...getHeaders().apiKey },
           signal: abortSignal,
-        }
+        },
       )
       .then(async (res) => {
         if (useStream) {
@@ -209,6 +209,6 @@ export function useChat<T extends Chat>(props: T[]): ChatHook {
       clear,
       streamData,
       abort,
-    ]
+    ],
   );
 }
