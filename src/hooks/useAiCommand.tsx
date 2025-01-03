@@ -23,7 +23,8 @@ export const DEFAULT_AI_COMMANDS: Record<string, AiCommand> = {
   [IMPROVE_WRITING_AI_COMMAND_ID]: {
     id: IMPROVE_WRITING_AI_COMMAND_ID,
     name: "Improve Writing",
-    prompt: `Act as a spelling corrector, content writer, and text improver/editor. Reply to each message only with the rewritten text.
+    prompt: `Act as a spelling corrector, content writer, and text improver/editor. Reply with the rewritten text.
+Answer additional questions that may arise after receiving the corrected text.
 Strictly follow these rules:
 - Correct spelling, grammar, and punctuation errors in the given text
 - Enhance clarity and conciseness without altering the original meaning
